@@ -3,9 +3,23 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FastAPI Mobile App</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .btn { display: block; padding: 15px; margin: 10px 0; background: #007bff; color: white; text-decoration: none; border-radius: 5px; text-align: center; }
+        .api-test { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
 </head>
 <body>
     <h1>🚀 FastAPI Mobile App</h1>
-    <p>This is the clean version!</p>
+    <p>Your app is working locally!</p>
+    
+    <div class="api-test">
+        <h3>API Test Links:</h3>
+        <a href="/api/square/5" class="btn">Test Square: 5² = ?</a>
+        <a href="/api/reverse/hello" class="btn">Test Reverse: "hello" → ?</a>
+        <a href="/api/auth/test" class="btn">Test Auth</a>
+    </div>
+    
+    <p><strong>Status:</strong> ✅ Local testing ready</p>
 </body>
 </html>

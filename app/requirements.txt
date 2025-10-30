@@ -1,0 +1,13 @@
+fastapi[all]
+uvicorn
+jinja2
+sqlmodel
+alembic
+redis
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
+pytest
+httpx
+requests
