@@ -6,10 +6,10 @@ alembic
 redis
 python-multipart
 python-jose[cryptography]
-passlib[bcrypt]
 python-dotenv
 pytest
 httpx
 python-jose[cryptography]
-passlib[bcrypt]
 python-multipart
+passlib
+bcrypt
