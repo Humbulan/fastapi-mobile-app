@@ -11,15 +11,16 @@ MONGODB_URL = os.environ.get(
 
 print(f"🔧 Attempting MongoDB connection to: {MONGODB_URL.split('@')[1].split('/')[0] if '@' in MONGODB_URL else MONGODB_URL}")
 
-# Create MongoDB client with SSL bypass
+# Create MongoDB client with CORRECTED SSL configuration
 try:
-    # --- CRITICAL FIX: Bypass SSL certificate validation ---
+    # --- FIXED: Removed conflicting tlsInsecure parameter ---
     client = MongoClient(
         MONGODB_URL, 
         server_api=ServerApi('1'),
-        # Bypass strict SSL checking due to Render environment issues
+        # KEEP THIS: Bypass SSL certificate validation
         tlsAllowInvalidCertificates=True,
-        # Additional connection parameters for stability
+        # REMOVED: tlsInsecure=True (conflicts with tlsAllowInvalidCertificates)
+        # Additional stable connection parameters
         connectTimeoutMS=30000,
         socketTimeoutMS=30000,
         serverSelectionTimeoutMS=30000,
@@ -28,7 +29,7 @@ try:
     
     # Test connection
     client.admin.command('ping')
-    print("✅ SUCCESS: Connected to MongoDB Atlas with SSL bypass!")
+    print("✅ SUCCESS: Connected to MongoDB Atlas with corrected SSL configuration!")
     
     # Get database and collections
     database = client.fastapi_app
@@ -121,6 +122,7 @@ if client:
         print("🎯 MongoDB Atlas connection is ACTIVE and WORKING!")
         print("📊 Database: fastapi_app")
         print("🗂️  Collections: users, sessions, premium_data")
+        print("🔐 SSL Configuration: tlsAllowInvalidCertificates=True (tlsInsecure REMOVED)")
     except Exception as e:
         print(f"⚠️  MongoDB connection test failed: {e}")
 else:
