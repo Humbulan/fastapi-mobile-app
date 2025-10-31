@@ -1,0 +1,41 @@
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: fastapi-mobile-app
+    env: python
+    plan: free
+    region: ohio
+    branch: main
+    
+    # Build configuration
+    buildCommand: pip install -r requirements.txt
+    
+    # Start command
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    
+    # Environment variables
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    
+    # Health check path
+    healthCheckPath: /health
+    
+    # Auto-deploy from main branch
+    autoDeploy: true
+
+  # Redis Service (if needed)
+  - type: redis
+    name: fastapi-redis
+    plan: free
+    region: ohio
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+# Database Service (if you add PostgreSQL later)
+# - type: postgres
+#   name: fastapi-db
+#   plan: free
+#   region: ohio
