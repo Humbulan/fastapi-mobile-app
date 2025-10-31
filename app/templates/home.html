@@ -1,25 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FastAPI Mobile App</title>
+    <meta name="description" content="Progressive Web App built with FastAPI">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#007bff">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    
     <style>
-        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .btn { display: block; padding: 15px; margin: 10px 0; background: #007bff; color: white; text-decoration: none; border-radius: 5px; text-align: center; }
-        .api-test { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .btn { 
+            display: block; 
+            padding: 15px 20px; 
+            margin: 15px 0; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .btn:hover { 
+            background: #0056b3; 
+            transform: translateY(-2px);
+        }
+        .api-test { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            border-left: 4px solid #007bff;
+        }
+        .status { 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0;
+            text-align: center;
+        }
+        .online { background: #d4edda; color: #155724; }
+        .offline { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
-    <h1>🚀 FastAPI Mobile App</h1>
-    <p>Your app is working locally!</p>
-    
-    <div class="api-test">
-        <h3>API Test Links:</h3>
-        <a href="/api/square/5" class="btn">Test Square: 5² = ?</a>
-        <a href="/api/reverse/hello" class="btn">Test Reverse: "hello" → ?</a>
-        <a href="/api/auth/test" class="btn">Test Auth</a>
+    <div class="container">
+        <h1>🚀 FastAPI Mobile PWA</h1>
+        <p>Your progressive web app is now optimized for mobile performance!</p>
+        
+        <div id="status" class="status online">
+            ✅ Online & Ready
+        </div>
+        
+        <div class="api-test">
+            <h3>🔧 API Test Links:</h3>
+            <a href="/api/square/5" class="btn">Test Square: 5² = ?</a>
+            <a href="/api/reverse/hello" class="btn">Test Reverse: "hello" → ?</a>
+            <a href="/api/auth/test" class="btn">Test Auth System</a>
+        </div>
+        
+        <div class="api-test">
+            <h3>📱 PWA Features:</h3>
+            <p><strong>Service Worker:</strong> <span id="sw-status">Checking...</span></p>
+            <p><strong>Cache Strategy:</strong> Optimized for mobile</p>
+            <p><strong>Offline Support:</strong> Enabled</p>
+            <button onclick="installPWA()" class="btn" id="installBtn" style="display:none;">
+                📲 Install App
+            </button>
+        </div>
+        
+        <p><strong>Status:</strong> 🎉 Production Ready with PWA Optimization</p>
     </div>
-    
-    <p><strong>Status:</strong> ✅ Local testing ready</p>
+
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then((registration) => {
+                    console.log('Service Worker registered:', registration);
+                    document.getElementById('sw-status').textContent = '✅ Active';
+                })
+                .catch((error) => {
+                    console.log('Service Worker registration failed:', error);
+                    document.getElementById('sw-status').textContent = '❌ Failed';
+                });
+        }
+
+        // Online/Offline Detection
+        window.addEventListener('online', () => {
+            document.getElementById('status').className = 'status online';
+            document.getElementById('status').textContent = '✅ Online & Ready';
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('status').className = 'status offline';
+            document.getElementById('status').textContent = '⚠️ Offline - Limited Functionality';
+        });
+
+        // PWA Installation
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install');
+                    }
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
+                });
+            }
+        }
+    </script>
 </body>
 </html>
