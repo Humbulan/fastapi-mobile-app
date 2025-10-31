@@ -9,13 +9,26 @@ MONGODB_URL = os.environ.get(
     "mongodb+srv://Humbulani:YOUR_PASSWORD_HERE@skim99.1go8lny.mongodb.net/?retryWrites=true&w=majority&appName=Skim99"
 )
 
-# Create MongoDB client with proper configuration
+print(f"🔧 Attempting MongoDB connection to: {MONGODB_URL.split('@')[1].split('/')[0] if '@' in MONGODB_URL else MONGODB_URL}")
+
+# Create MongoDB client with SSL bypass
 try:
-    client = MongoClient(MONGODB_URL, server_api=ServerApi('1'))
+    # --- CRITICAL FIX: Bypass SSL certificate validation ---
+    client = MongoClient(
+        MONGODB_URL, 
+        server_api=ServerApi('1'),
+        # Bypass strict SSL checking due to Render environment issues
+        tlsAllowInvalidCertificates=True,
+        # Additional connection parameters for stability
+        connectTimeoutMS=30000,
+        socketTimeoutMS=30000,
+        serverSelectionTimeoutMS=30000,
+        maxPoolSize=10
+    )
     
     # Test connection
     client.admin.command('ping')
-    print("✅ Successfully connected to MongoDB Atlas!")
+    print("✅ SUCCESS: Connected to MongoDB Atlas with SSL bypass!")
     
     # Get database and collections
     database = client.fastapi_app
@@ -23,9 +36,12 @@ try:
     sessions_collection = database.sessions
     premium_data_collection = database.premium_data
     
+    print("🎉 MongoDB collections initialized successfully!")
+    
 except Exception as e:
-    print(f"❌ MongoDB connection failed: {e}")
-    # Fallback to local development (you can remove this in production)
+    print(f"❌ CRITICAL: MongoDB connection failed: {e}")
+    print("💡 This indicates a fundamental environment issue with Render's free tier.")
+    # Fallback to local development
     client = None
     database = None
     users_collection = None
@@ -33,50 +49,79 @@ except Exception as e:
     premium_data_collection = None
 
 # MongoDB helper functions
-async def get_user_by_username(username: str):
+def get_user_by_username(username: str):
+    if not users_collection:
+        print("⚠️  MongoDB not connected - returning None for user lookup")
+        return None
+    try:
+        user = users_collection.find_one({"username": username})
+        return user
+    except Exception as e:
+        print(f"❌ Error in get_user_by_username: {e}")
+        return None
+
+def get_user_by_email(email: str):
     if not users_collection:
         return None
-    user = users_collection.find_one({"username": username})
-    return user
+    try:
+        user = users_collection.find_one({"email": email})
+        return user
+    except Exception as e:
+        print(f"❌ Error in get_user_by_email: {e}")
+        return None
 
-async def get_user_by_email(email: str):
+def create_user(user_data: dict):
     if not users_collection:
         return None
-    user = users_collection.find_one({"email": email})
-    return user
+    try:
+        result = users_collection.insert_one(user_data)
+        return result
+    except Exception as e:
+        print(f"❌ Error in create_user: {e}")
+        return None
 
-async def create_user(user_data: dict):
+def update_user(username: str, update_data: dict):
     if not users_collection:
         return None
-    result = users_collection.insert_one(user_data)
-    return result
-
-async def update_user(username: str, update_data: dict):
-    if not users_collection:
+    try:
+        update_data["updated_at"] = datetime.utcnow()
+        result = users_collection.update_one(
+            {"username": username}, 
+            {"$set": update_data}
+        )
+        return result
+    except Exception as e:
+        print(f"❌ Error in update_user: {e}")
         return None
-    update_data["updated_at"] = datetime.utcnow()
-    result = users_collection.update_one(
-        {"username": username}, 
-        {"$set": update_data}
-    )
-    return result
 
-async def save_session_data(session_data: dict):
+def save_session_data(session_data: dict):
     if not sessions_collection:
         return None
-    result = sessions_collection.insert_one(session_data)
-    return result
+    try:
+        result = sessions_collection.insert_one(session_data)
+        return result
+    except Exception as e:
+        print(f"❌ Error in save_session_data: {e}")
+        return None
 
-async def get_session_data(session_id: str):
+def get_session_data(session_id: str):
     if not sessions_collection:
         return None
-    session = sessions_collection.find_one({"session_id": session_id})
-    return session
+    try:
+        session = sessions_collection.find_one({"session_id": session_id})
+        return session
+    except Exception as e:
+        print(f"❌ Error in get_session_data: {e}")
+        return None
 
-# Test the connection on startup
+# Enhanced connection test
 if client:
     try:
         client.admin.command('ping')
-        print("🎉 MongoDB Atlas connection is working perfectly!")
+        print("🎯 MongoDB Atlas connection is ACTIVE and WORKING!")
+        print("📊 Database: fastapi_app")
+        print("🗂️  Collections: users, sessions, premium_data")
     except Exception as e:
         print(f"⚠️  MongoDB connection test failed: {e}")
+else:
+    print("🚨 MongoDB client is None - connection failed completely")

@@ -38,8 +38,8 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-async def authenticate_user(username: str, password: str):
-    user = await get_user_by_username(username)
+def authenticate_user(username: str, password: str):
+    user = get_user_by_username(username)
     if not user:
         return False
     if not verify_password(password, user["hashed_password"]):
@@ -57,9 +57,9 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 @router.post("/register", response_model=Token)
-async def register_user(user: UserRegister):
+def register_user(user: UserRegister):
     # Check if username already exists
-    existing_user = await get_user_by_username(user.username)
+    existing_user = get_user_by_username(user.username)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -67,7 +67,7 @@ async def register_user(user: UserRegister):
         )
     
     # Check if email already exists
-    existing_email = await get_user_by_email(user.email)
+    existing_email = get_user_by_email(user.email)
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -86,12 +86,12 @@ async def register_user(user: UserRegister):
         "updated_at": datetime.utcnow()
     }
     
-    result = await create_user(user_data)
+    result = create_user(user_data)
     
     if not result:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection failed"
+            detail="Database connection failed - MongoDB not available"
         )
     
     # Create access token
@@ -108,8 +108,8 @@ async def register_user(user: UserRegister):
     }
 
 @router.post("/login", response_model=Token)
-async def login_for_access_token(username: str, password: str):
-    user = await authenticate_user(username, password)
+def login_for_access_token(username: str, password: str):
+    user = authenticate_user(username, password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -130,8 +130,8 @@ async def login_for_access_token(username: str, password: str):
     }
 
 @router.get("/me")
-async def read_users_me(username: str):
-    user = await get_user_by_username(username)
+def read_users_me(username: str):
+    user = get_user_by_username(username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return {
@@ -143,21 +143,21 @@ async def read_users_me(username: str):
     }
 
 @router.get("/test")
-async def auth_test():
-    return {"message": "Auth system is working with MongoDB Atlas! 🎉"}
+def auth_test():
+    return {"message": "Auth system is working! 🎉"}
 
 @router.post("/upgrade-premium/{username}")
-async def upgrade_to_premium(username: str):
-    user = await get_user_by_username(username)
+def upgrade_to_premium(username: str):
+    user = get_user_by_username(username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    result = await update_user(username, {"premium": True})
+    result = update_user(username, {"premium": True})
     
     if not result:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database update failed"
+            detail="Database update failed - MongoDB not available"
         )
     
     return {
@@ -167,7 +167,7 @@ async def upgrade_to_premium(username: str):
     }
 
 @router.get("/db-status")
-async def check_database_status():
+def check_database_status():
     from app.mongodb import client
     try:
         client.admin.command('ping')
@@ -175,11 +175,13 @@ async def check_database_status():
             "status": "connected",
             "message": "MongoDB Atlas is working perfectly!",
             "database": "MongoDB Atlas",
-            "cluster": "Skim99"
+            "cluster": "Skim99",
+            "ssl_bypass": "active"
         }
     except Exception as e:
         return {
             "status": "disconnected",
             "message": str(e),
-            "database": "MongoDB Atlas"
+            "database": "MongoDB Atlas",
+            "ssl_bypass": "failed"
         }
