@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastAPI Mobile App</title>
-    <meta name="description" content="Progressive Web App built with FastAPI">
+    <title>FastAPI Mobile App - Premium Calculator</title>
+    <meta name="description" content="Advanced calculator and text tools with premium features">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
-    
-    <!-- Theme Color -->
     <meta name="theme-color" content="#007bff">
-    
-    <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
     
     <style>
@@ -34,17 +30,25 @@
         .btn { 
             display: block; 
             padding: 15px 20px; 
-            margin: 15px 0; 
+            margin: 10px 0; 
             background: #007bff; 
             color: white; 
             text-decoration: none; 
             border-radius: 8px; 
             text-align: center;
+            border: none;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
         .btn:hover { 
             background: #0056b3; 
             transform: translateY(-2px);
+        }
+        .btn-premium { 
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+        .btn-premium:hover { 
+            background: linear-gradient(135deg, #ee5a24, #ff6b6b);
         }
         .api-test { 
             background: #f8f9fa; 
@@ -52,6 +56,10 @@
             margin: 20px 0; 
             border-radius: 10px; 
             border-left: 4px solid #007bff;
+        }
+        .premium-section { 
+            background: linear-gradient(135deg, #fff9e6, #ffeaa7);
+            border-left: 4px solid #fdcb6e;
         }
         .status { 
             padding: 10px; 
@@ -68,53 +76,121 @@
             border-radius: 5px;
             display: none;
         }
+        .auth-section {
+            background: #e8f4fd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #17a2b8;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .premium-badge {
+            background: #ffd700;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 FastAPI Mobile PWA</h1>
-        <p>Your progressive web app is now optimized for mobile performance!</p>
+        <h1>🚀 FastAPI Premium Calculator</h1>
+        <p>Your all-in-one calculation and text processing platform!</p>
         
         <div id="status" class="status online">
             ✅ Online & Ready
         </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-section">
+            <h3>🔐 User Account</h3>
+            <div id="auth-status">Not logged in</div>
+            <button onclick="showLogin()" class="btn">Login</button>
+            <button onclick="showRegister()" class="btn">Register</button>
+            <button onclick="logout()" class="btn" style="display:none;" id="logoutBtn">Logout</button>
+        </div>
         
+        <!-- Basic Calculator -->
         <div class="api-test">
-            <h3>🔧 API Test Links:</h3>
+            <h3>🧮 Basic Calculator</h3>
             
-            <!-- Square Calculator -->
             <div>
-                <input type="number" id="squareInput" placeholder="Enter a number" value="5" style="padding: 10px; width: 100%; margin: 5px 0;">
-                <button onclick="testSquare()" class="btn">Test Square Calculator</button>
+                <input type="number" id="squareInput" placeholder="Enter a number" value="5">
+                <button onclick="testSquare()" class="btn">Square Calculator</button>
                 <div id="squareResult" class="result"></div>
             </div>
             
-            <!-- Text Reverser -->
             <div>
-                <input type="text" id="reverseInput" placeholder="Enter text to reverse" value="hello" style="padding: 10px; width: 100%; margin: 5px 0;">
-                <button onclick="testReverse()" class="btn">Test Text Reverser</button>
+                <input type="text" id="reverseInput" placeholder="Enter text to reverse" value="hello">
+                <button onclick="testReverse()" class="btn">Text Reverser</button>
                 <div id="reverseResult" class="result"></div>
             </div>
-            
-            <!-- Auth Test -->
-            <button onclick="testAuth()" class="btn">Test Auth System</button>
-            <div id="authResult" class="result"></div>
+
+            <div>
+                <input type="number" id="sqrtInput" placeholder="Enter number for square root" value="25">
+                <button onclick="testSqrt()" class="btn">Square Root</button>
+                <div id="sqrtResult" class="result"></div>
+            </div>
         </div>
-        
+
+        <!-- Premium Features -->
+        <div class="api-test premium-section">
+            <h3>⭐ Premium Features <span class="premium-badge">PRO</span></h3>
+            <p>Upgrade to access advanced tools!</p>
+            
+            <div>
+                <input type="text" id="advancedCalcInput" placeholder="Enter math expression (e.g., 2+2*3)" value="2+2*3">
+                <button onclick="testAdvancedCalc()" class="btn btn-premium">Advanced Calculator</button>
+                <div id="advancedCalcResult" class="result"></div>
+            </div>
+
+            <div>
+                <input type="number" id="currencyAmount" placeholder="Amount" value="100">
+                <select id="fromCurrency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="ZAR">ZAR</option>
+                </select>
+                <select id="toCurrency">
+                    <option value="ZAR">ZAR</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                </select>
+                <button onclick="testCurrency()" class="btn btn-premium">Currency Converter</button>
+                <div id="currencyResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Marketing Section -->
         <div class="api-test">
-            <h3>📱 PWA Features:</h3>
-            <p><strong>Service Worker:</strong> <span id="sw-status">Checking...</span></p>
-            <p><strong>Cache Strategy:</strong> Optimized for mobile</p>
-            <p><strong>Offline Support:</strong> Enabled</p>
-            <button onclick="installPWA()" class="btn" id="installBtn" style="display:none;">
-                📲 Install App
+            <h3>📈 Share & Grow</h3>
+            <button onclick="shareApp()" class="btn" style="background: #28a745;">
+                📤 Share This App
+            </button>
+            <button onclick="showFeedback()" class="btn" style="background: #17a2b8;">
+                💬 Send Feedback
+            </button>
+            <button onclick="requestFeature()" class="btn" style="background: #6f42c1;">
+                💡 Request Feature
             </button>
         </div>
         
-        <p><strong>Status:</strong> 🎉 Production Ready with PWA Optimization</p>
+        <p><strong>Status:</strong> 🎉 Production Ready with Premium Features!</p>
     </div>
 
     <script>
+        let currentUser = null;
+        let currentToken = null;
+
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/service-worker.js')
@@ -128,38 +204,76 @@
                 });
         }
 
-        // Online/Offline Detection
-        window.addEventListener('online', () => {
-            document.getElementById('status').className = 'status online';
-            document.getElementById('status').textContent = '✅ Online & Ready';
-        });
-
-        window.addEventListener('offline', () => {
-            document.getElementById('status').className = 'status offline';
-            document.getElementById('status').textContent = '⚠️ Offline - Limited Functionality';
-        });
-
-        // PWA Installation
-        let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'block';
-        });
-
-        function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted install');
+        // Authentication Functions
+        async function showLogin() {
+            const username = prompt('Enter username:');
+            const password = prompt('Enter password:');
+            if (username && password) {
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        currentUser = data.username;
+                        currentToken = data.access_token;
+                        document.getElementById('auth-status').textContent = `Logged in as: ${data.username} ${data.premium ? '⭐' : ''}`;
+                        document.getElementById('logoutBtn').style.display = 'block';
+                        alert('Login successful!');
+                    } else {
+                        alert('Login failed: ' + data.detail);
                     }
-                    deferredPrompt = null;
-                    installBtn.style.display = 'none';
-                });
+                } catch (error) {
+                    alert('Login error: ' + error.message);
+                }
             }
+        }
+
+        async function showRegister() {
+            const username = prompt('Enter username:');
+            const email = prompt('Enter email:');
+            const fullName = prompt('Enter full name:');
+            const password = prompt('Enter password:');
+            if (username && email && fullName && password) {
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            email: email,
+                            password: password,
+                            full_name: fullName
+                        })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        currentUser = data.username;
+                        currentToken = data.access_token;
+                        document.getElementById('auth-status').textContent = `Registered and logged in as: ${data.username}`;
+                        document.getElementById('logoutBtn').style.display = 'block';
+                        alert('Registration successful!');
+                    } else {
+                        alert('Registration failed: ' + data.detail);
+                    }
+                } catch (error) {
+                    alert('Registration error: ' + error.message);
+                }
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            currentToken = null;
+            document.getElementById('auth-status').textContent = 'Not logged in';
+            document.getElementById('logoutBtn').style.display = 'none';
+            alert('Logged out successfully!');
         }
 
         // API Test Functions
@@ -197,21 +311,124 @@
             }
         }
 
-        async function testAuth() {
-            const resultDiv = document.getElementById('authResult');
+        async function testSqrt() {
+            const number = document.getElementById('sqrtInput').value;
+            const resultDiv = document.getElementById('sqrtResult');
             
             try {
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = '🔄 Testing auth...';
+                resultDiv.innerHTML = '🔄 Calculating...';
                 
-                const response = await fetch('/api/auth/test');
+                const response = await fetch(`/api/sqrt/${number}`);
                 const data = await response.json();
                 
-                resultDiv.innerHTML = `✅ Auth Test: <strong>${data.message}</strong>`;
+                resultDiv.innerHTML = `✅ Result: √${number} = <strong>${data.result}</strong>`;
             } catch (error) {
                 resultDiv.innerHTML = `❌ Error: ${error.message}`;
             }
         }
+
+        async function testAdvancedCalc() {
+            const expression = document.getElementById('advancedCalcInput').value;
+            const resultDiv = document.getElementById('advancedCalcResult');
+            
+            if (!currentToken) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '❌ Please login to access premium features';
+                return;
+            }
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Calculating...';
+                
+                const response = await fetch(`/api/advanced-calculator/${encodeURIComponent(expression)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `✅ Premium Result: ${expression} = <strong>${data.result}</strong>`;
+                } else {
+                    resultDiv.innerHTML = `❌ Error: ${data.detail}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testCurrency() {
+            const amount = document.getElementById('currencyAmount').value;
+            const from = document.getElementById('fromCurrency').value;
+            const to = document.getElementById('toCurrency').value;
+            const resultDiv = document.getElementById('currencyResult');
+            
+            if (!currentToken) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '❌ Please login to access premium features';
+                return;
+            }
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Converting...';
+                
+                const response = await fetch(`/api/currency-convert/${amount}/${from}/${to}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `✅ ${amount} ${from} = <strong>${data.converted_amount} ${to}</strong>`;
+                } else {
+                    resultDiv.innerHTML = `❌ Error: ${data.detail}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Marketing Functions
+        function shareApp() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'FastAPI Premium Calculator',
+                    text: 'Check out this amazing calculator app!',
+                    url: 'https://humbu.store'
+                });
+            } else {
+                alert('Share this app: https://humbu.store');
+            }
+        }
+
+        function showFeedback() {
+            const feedback = prompt('What do you think about our app?');
+            if (feedback) {
+                alert('Thank you for your feedback! We appreciate it. 🙏');
+            }
+        }
+
+        function requestFeature() {
+            const feature = prompt('What feature would you like to see?');
+            if (feature) {
+                alert('Great suggestion! We\'ll consider adding: ' + feature);
+            }
+        }
+
+        // Online/Offline Detection
+        window.addEventListener('online', () => {
+            document.getElementById('status').className = 'status online';
+            document.getElementById('status').textContent = '✅ Online & Ready';
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('status').className = 'status offline';
+            document.getElementById('status').textContent = '⚠️ Offline - Limited Functionality';
+        });
     </script>
 </body>
 </html>
