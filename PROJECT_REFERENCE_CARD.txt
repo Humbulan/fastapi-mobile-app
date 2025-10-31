@@ -1,0 +1,31 @@
+🚀 FASTAPI MOBILE APP - QUICK REFERENCE
+=======================================
+
+🌐 LIVE URL: https://humbu.store
+📱 MOBILE: PWA Ready
+🔐 SECURITY: HTTPS/SSL
+📅 DEPLOYED: $(date +"%Y-%m-%d")
+
+ENDPOINTS:
+• /              - Home Page
+• /health        - System Status
+• /api/square/X  - Calculate square
+• /api/reverse/X - Reverse text
+
+FILES:
+• humbu_store_certificate.pem - SSL Certificate
+• PROJECT_CERTIFICATE.md      - Full Documentation
+• DEPLOYMENT_CERTIFICATE.txt  - Printable Certificate
+
+TECH STACK:
+• Backend: FastAPI (Python)
+• Frontend: HTML/CSS/JS
+• Deployment: Render.com
+• Domain: humbu.store
+
+CONTACT:
+• Developer: Humbulani
+• Email: humbulani@humbu.store
+• GitHub: Humbulan
+
+"Successfully deployed production mobile web application"
