@@ -7,9 +7,7 @@ from app.mongodb import (
     get_user_by_username, 
     get_user_by_email, 
     create_user, 
-    update_user,
-    User,
-    UserRegister
+    update_user
 )
 
 router = APIRouter()
@@ -21,6 +19,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class UserRegister(BaseModel):
+    username: str
+    email: str
+    password: str
+    full_name: str
 
 class Token(BaseModel):
     access_token: str
@@ -84,6 +88,12 @@ async def register_user(user: UserRegister):
     
     result = await create_user(user_data)
     
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection failed"
+        )
+    
     # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -134,7 +144,7 @@ async def read_users_me(username: str):
 
 @router.get("/test")
 async def auth_test():
-    return {"message": "Auth system is working with MongoDB! 🎉"}
+    return {"message": "Auth system is working with MongoDB Atlas! 🎉"}
 
 @router.post("/upgrade-premium/{username}")
 async def upgrade_to_premium(username: str):
@@ -142,10 +152,34 @@ async def upgrade_to_premium(username: str):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    await update_user(username, {"premium": True})
+    result = await update_user(username, {"premium": True})
+    
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database update failed"
+        )
     
     return {
         "message": "User upgraded to premium successfully!",
         "username": username,
         "premium": True
     }
+
+@router.get("/db-status")
+async def check_database_status():
+    from app.mongodb import client
+    try:
+        client.admin.command('ping')
+        return {
+            "status": "connected",
+            "message": "MongoDB Atlas is working perfectly!",
+            "database": "MongoDB Atlas",
+            "cluster": "Skim99"
+        }
+    except Exception as e:
+        return {
+            "status": "disconnected",
+            "message": str(e),
+            "database": "MongoDB Atlas"
+        }

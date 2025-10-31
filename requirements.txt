@@ -12,6 +12,7 @@ python-jose[cryptography]
 python-multipart
 passlib
 bcrypt
-motor
+pymongo
+dnspython
 pymongo
 dnspython
