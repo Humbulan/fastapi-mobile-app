@@ -61,6 +61,13 @@
         }
         .online { background: #d4edda; color: #155724; }
         .offline { background: #f8d7da; color: #721c24; }
+        .result { 
+            background: #e9ecef; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -74,9 +81,24 @@
         
         <div class="api-test">
             <h3>🔧 API Test Links:</h3>
-            <a href="/api/square/5" class="btn">Test Square: 5² = ?</a>
-            <a href="/api/reverse/hello" class="btn">Test Reverse: "hello" → ?</a>
-            <a href="/api/auth/test" class="btn">Test Auth System</a>
+            
+            <!-- Square Calculator -->
+            <div>
+                <input type="number" id="squareInput" placeholder="Enter a number" value="5" style="padding: 10px; width: 100%; margin: 5px 0;">
+                <button onclick="testSquare()" class="btn">Test Square Calculator</button>
+                <div id="squareResult" class="result"></div>
+            </div>
+            
+            <!-- Text Reverser -->
+            <div>
+                <input type="text" id="reverseInput" placeholder="Enter text to reverse" value="hello" style="padding: 10px; width: 100%; margin: 5px 0;">
+                <button onclick="testReverse()" class="btn">Test Text Reverser</button>
+                <div id="reverseResult" class="result"></div>
+            </div>
+            
+            <!-- Auth Test -->
+            <button onclick="testAuth()" class="btn">Test Auth System</button>
+            <div id="authResult" class="result"></div>
         </div>
         
         <div class="api-test">
@@ -137,6 +159,57 @@
                     deferredPrompt = null;
                     installBtn.style.display = 'none';
                 });
+            }
+        }
+
+        // API Test Functions
+        async function testSquare() {
+            const number = document.getElementById('squareInput').value;
+            const resultDiv = document.getElementById('squareResult');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Calculating...';
+                
+                const response = await fetch(`/api/square/${number}`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `✅ Result: ${number}² = <strong>${data.result}</strong>`;
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testReverse() {
+            const text = document.getElementById('reverseInput').value;
+            const resultDiv = document.getElementById('reverseResult');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Reversing...';
+                
+                const response = await fetch(`/api/reverse/${text}`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `✅ Result: "${text}" → <strong>"${data.result}"</strong>`;
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testAuth() {
+            const resultDiv = document.getElementById('authResult');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Testing auth...';
+                
+                const response = await fetch('/api/auth/test');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `✅ Auth Test: <strong>${data.message}</strong>`;
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
             }
         }
     </script>
