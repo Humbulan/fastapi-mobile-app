@@ -1,38 +1,26 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from app.mongodb import (
+    get_user_by_username, 
+    get_user_by_email, 
+    create_user, 
+    update_user,
+    User,
+    UserRegister
+)
 
 router = APIRouter()
 
-# Secret key for JWT tokens
-SECRET_KEY = "your-secret-key-change-in-production"
+# JWT Configuration
+SECRET_KEY = "your-secret-key-change-in-production-mongodb-12345"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# User database (in production, use real database)
-fake_users_db = {
-    "admin": {
-        "username": "admin",
-        "full_name": "Administrator",
-        "email": "admin@humbu.store",
-        "hashed_password": pwd_context.hash("admin123"),
-        "premium": True
-    }
-}
-
-class User(BaseModel):
-    username: str
-    email: str
-    full_name: str
-
-class UserInDB(User):
-    hashed_password: str
-    premium: bool = False
 
 class Token(BaseModel):
     access_token: str
@@ -40,28 +28,17 @@ class Token(BaseModel):
     username: str
     premium: bool
 
-class UserRegister(BaseModel):
-    username: str
-    email: str
-    password: str
-    full_name: str
-
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+async def authenticate_user(username: str, password: str):
+    user = await get_user_by_username(username)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, user["hashed_password"]):
         return False
     return user
 
@@ -77,18 +54,37 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 
 @router.post("/register", response_model=Token)
 async def register_user(user: UserRegister):
-    if user.username in fake_users_db:
-        raise HTTPException(status_code=400, detail="Username already registered")
+    # Check if username already exists
+    existing_user = await get_user_by_username(user.username)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered"
+        )
     
+    # Check if email already exists
+    existing_email = await get_user_by_email(user.email)
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Create new user in MongoDB
     hashed_password = get_password_hash(user.password)
-    fake_users_db[user.username] = {
+    user_data = {
         "username": user.username,
         "email": user.email,
         "full_name": user.full_name,
         "hashed_password": hashed_password,
-        "premium": False
+        "premium": False,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
     }
     
+    result = await create_user(user_data)
+    
+    # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
@@ -103,28 +99,53 @@ async def register_user(user: UserRegister):
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(username: str, password: str):
-    user = authenticate_user(fake_users_db, username, password)
+    user = await authenticate_user(username, password)
     if not user:
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user["username"]}, expires_delta=access_token_expires
     )
+    
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "username": user.username,
-        "premium": user.premium
+        "username": user["username"],
+        "premium": user.get("premium", False)
     }
 
 @router.get("/me")
-async def read_users_me(current_user: User = Depends()):
-    return current_user
+async def read_users_me(username: str):
+    user = await get_user_by_username(username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "username": user["username"],
+        "email": user["email"],
+        "full_name": user["full_name"],
+        "premium": user.get("premium", False),
+        "member_since": user["created_at"]
+    }
 
 @router.get("/test")
 async def auth_test():
-    return {"message": "Auth system is working!"}
+    return {"message": "Auth system is working with MongoDB! 🎉"}
+
+@router.post("/upgrade-premium/{username}")
+async def upgrade_to_premium(username: str):
+    user = await get_user_by_username(username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await update_user(username, {"premium": True})
+    
+    return {
+        "message": "User upgraded to premium successfully!",
+        "username": username,
+        "premium": True
+    }
