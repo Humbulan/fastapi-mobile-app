@@ -15,39 +15,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# AI Agent Configuration - Ollama on port 11434
-AI_AGENT_URL = "http://localhost:11434/api/generate"
+# AI Agent Configuration
+AI_AGENT_URL = "http://localhost:8080/api/ai/chat"
 TIMEOUT = 30.0  # Increased timeout for AI responses
 
 @app.post("/ai/chat")
 async def ai_chat_proxy(message_data: dict):
     """
-    Proxy endpoint to forward chat messages to Ollama on port 11434
+    Proxy endpoint to forward chat messages to your local AI Agent
     """
     try:
-        # Transform the incoming message to Ollama's expected format
-        ollama_payload = {
-            "model": "qwen:0.5b",
-            "prompt": message_data.get("message", ""),
-            "stream": False
-        }
-        
-        # Forward the request to Ollama
+        # Forward the request to your local AI Agent
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
             response = await client.post(
                 AI_AGENT_URL,
-                json=ollama_payload,
+                json=message_data,
                 headers={"Content-Type": "application/json"}
             )
             
             if response.status_code == 200:
-                ollama_response = response.json()
-                # Transform Ollama's response back to your expected format
-                return {
-                    "response": ollama_response.get("response", ""),
-                    "model": ollama_response.get("model", "qwen:0.5b"),
-                    "timestamp": datetime.now().isoformat()
-                }
+                return response.json()
             else:
                 raise HTTPException(
                     status_code=response.status_code,
@@ -57,7 +44,7 @@ async def ai_chat_proxy(message_data: dict):
     except httpx.ConnectError:
         raise HTTPException(
             status_code=503,
-            detail="AI Agent unavailable - ensure Ollama is running on localhost:11434"
+            detail="AI Agent unavailable - ensure it's running on localhost:8080"
         )
     except httpx.TimeoutException:
         raise HTTPException(
@@ -77,8 +64,7 @@ async def ai_health_check():
     """
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get("http://localhost:11434/api/tags")
-            
+            response = await client.get("http://localhost:8080/health")
             return {
                 "ai_agent_status": "online" if response.status_code == 200 else "offline",
                 "timestamp": datetime.now().isoformat(),
@@ -99,9 +85,9 @@ async def integration_status():
     return {
         "business_api": "✅ Operational (v7.0.0)",
         "mobile_app_api": "✅ Running on Render",
-        "ai_agent": "✅ Operational",
+        "ai_agent": "🔌 Requires local connection",
         "timestamp": datetime.now().isoformat(),
-        "next_step": "Configure Cloudflare Tunnel for Port 8118"
+        "next_step": "Deploy AI proxy route to enable AI features"
     }
 
 # Enhanced AI Proxy with Business Context
@@ -120,18 +106,18 @@ async def ai_business_chat(user_message: str):
             "context": "IMPERIAL_OMEGA_SOVEREIGNTY"
         }
         
-        # Prepare enhanced message for AI in Ollama format
-        ollama_payload = {
-            "model": "qwen:0.5b",
-            "prompt": f"Context: {json.dumps(business_context)}\n\nUser Query: {user_message}\n\nProvide a helpful response:",
-            "stream": False
+        # Prepare enhanced message for AI
+        enhanced_message = {
+            "message": user_message,
+            "context": business_context,
+            "timestamp": datetime.now().isoformat()
         }
         
         # Forward to AI Agent
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
             response = await client.post(
                 AI_AGENT_URL,
-                json=ollama_payload,
+                json=enhanced_message,
                 headers={"Content-Type": "application/json"}
             )
             
@@ -139,7 +125,7 @@ async def ai_business_chat(user_message: str):
                 ai_response = response.json()
                 # Add business context to AI response
                 return {
-                    "ai_response": ai_response.get("response", ""),
+                    "ai_response": ai_response,
                     "business_context": business_context,
                     "timestamp": datetime.now().isoformat()
                 }
@@ -164,43 +150,3 @@ async def ai_business_chat(user_message: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-@app.post("/ai/proxy")
-async def ai_proxy(payload: dict):
-    """
-    Simple proxy endpoint that forwards requests to qwen:0.5b
-    """
-    try:
-        # Prepare payload for Ollama
-        ollama_payload = {
-            "model": "qwen:0.5b",
-            "prompt": payload.get("prompt", ""),
-            "stream": False
-        }
-        
-        # Forward to Ollama
-        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-            response = await client.post(
-                "http://localhost:11434/api/generate",
-                json=ollama_payload,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"AI Agent error: {response.text}"
-                )
-                
-    except httpx.ConnectError:
-        raise HTTPException(
-            status_code=503,
-            detail="AI Agent unavailable - ensure Ollama is running on localhost:11434"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"AI communication error: {str(e)}"
-        )
