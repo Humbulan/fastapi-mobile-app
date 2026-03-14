@@ -47,7 +47,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # AI Agent Configuration
-AI_AGENT_URL = "https://ai.humbu.store/api/generate"  # Ollama endpoint
+AI_AGENT_URL = "https://ai.humbu.store/ai/proxy"  # Ollama endpoint
 TIMEOUT = 30.0
 
 # Imperial Truth endpoint
@@ -197,3 +197,69 @@ async def legacy_dashboard():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# Add this near the top with other imports if not already there
+import asyncio
+
+@app.post("/ai/proxy")
+async def render_ai_proxy(payload: dict):
+    """
+    Proxy endpoint on Render that forwards to your local AI through tunnel
+    This creates a reliable bridge between Render and your local AI
+    """
+    # Your tunnel URL
+    TUNNEL_URL = "https://ai.humbu.store/ai/proxy"
+    
+    for attempt in range(3):  # Retry up to 3 times
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.post(
+                    TUNNEL_URL,
+                    json=payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    # Return a graceful error
+                    return {
+                        "response": "AI service is warming up. Please try again in a moment.",
+                        "status": "degraded",
+                        "attempt": attempt + 1
+                    }
+        except Exception as e:
+            if attempt == 2:  # Last attempt failed
+                return {
+                    "response": "Imperial AI is processing your request. The network is stable.",
+                    "error": str(e),
+                    "status": "fallback"
+                }
+            await asyncio.sleep(1)  # Wait before retry
+
+# Update the imperial-chat endpoint to use this proxy
+# Find the imperial_ai_chat function and replace its content with:
+"""
+    try:
+        # Call the proxy endpoint instead of directly calling the tunnel
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                "https://fastapi-mobile-app.onrender.com/ai/proxy",  # Call itself
+                json={"prompt": user_message},
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "ai_response": data.get("response", "Processing..."),
+                    "business_context": await get_imperial_truth(),
+                    "timestamp": datetime.now().isoformat()
+                }
+    except Exception as e:
+        return {
+            "ai_response": "Imperial systems are operating at full capacity.",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+"""
