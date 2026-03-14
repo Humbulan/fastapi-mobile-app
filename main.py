@@ -1,60 +1,37 @@
-"""
-🏛️ FastAPI Mobile App - Business Brain
-CEO: Humbulani Mudau | Imperial Intelligence Core
-SECURE VERSION: Imperial Gatekeeper Enabled
-"""
-
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
-from datetime import datetime
-import logging
+import httpx
 import secrets
-from typing import Dict, Any
 import os
+from datetime import datetime
+from typing import Dict, Any
+import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Imperial Gatekeeper - Basic Authentication
-security = HTTPBasic()
+# Imperial Gatekeeper - Optional for AI chat
+security = HTTPBasic(auto_error=False)
 
-def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
-    """
-    Imperial Gatekeeper - Validates CEO credentials
-    Only permits access to authorized Imperial personnel
-    """
-    correct_username = secrets.compare_digest(credentials.username, "humbulani")
-    correct_password = secrets.compare_digest(credentials.password, os.getenv("SECURE_PASSWORD", "default_pass"))
-    
-    if not (correct_username and correct_password):
-        logger.warning(f"Unauthorized access attempt: {credentials.username}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Imperial Access Denied: Invalid credentials",
-            headers={"WWW-Authenticate": "Basic realm='Imperial Nexus'"},
-        )
-    
-    logger.info(f"Authorized Imperial access: {credentials.username}")
-    return credentials.username
+def optional_auth(credentials: HTTPBasicCredentials = Depends(security)):
+    """Optional authentication - allows public access to AI chat"""
+    if credentials:
+        correct_username = secrets.compare_digest(credentials.username, "humbulani")
+        correct_password = secrets.compare_digest(credentials.password, os.getenv("SECURE_PASSWORD", "imperial2026"))
+        if correct_username and correct_password:
+            logger.info(f"Admin access granted: {credentials.username}")
+            return {"role": "admin", "username": credentials.username}
+    return {"role": "public", "username": "visitor"}
 
 # Create FastAPI app
 app = FastAPI(
-    title="Humbu Imperial Business Brain - SECURE",
-    description="Protected central intelligence core for the 17-port Imperial System",
-    version="2.1.0",
-    contact={
-        "name": "Humbulani Mudau",
-        "email": "humbulani@imperial.nexus",
-        "url": "https://fastapi-mobile-app.onrender.com"
-    },
-    license_info={
-        "name": "Imperial License - Confidential",
-        "url": "https://github.com/Ondwe/fastapi-mobile-app"
-    }
+    title="Imperial AI Nexus - Humbulani Mudau",
+    description="Enterprise AI Chat Interface with Imperial Truth Integration",
+    version="3.0.0"
 )
 
 # Add CORS middleware
@@ -66,222 +43,156 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files - Imperial Intelligence Dashboard
+# Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Root endpoint - PROTECTED Imperial Intelligence Dashboard
-@app.get("/", response_class=HTMLResponse, dependencies=[Depends(get_current_username)])
-async def read_root():
-    """
-    Imperial Intelligence Dashboard - Protected CEO Access Only
-    """
+# AI Agent Configuration
+AI_AGENT_URL = "http://localhost:11434/api/generate"  # Ollama endpoint
+TIMEOUT = 30.0
+
+# Imperial Truth endpoint
+@app.get("/api/imperial/truth")
+async def get_imperial_truth():
+    """Return current Imperial Truth metrics"""
+    return {
+        "valuation": 269905078380.45,
+        "lithium_trend": "BULLISH (+29.7%)",
+        "villages": 43,
+        "target": 900,
+        "status": "operational",
+        "timestamp": datetime.now().isoformat()
+    }
+
+# AI Chat endpoint (public)
+@app.post("/ai/chat")
+async def ai_chat(message_data: dict):
+    """Public AI chat endpoint"""
     try:
-        with open("public/index.html", "r") as f:
+        ollama_payload = {
+            "model": "qwen:0.5b",
+            "prompt": message_data.get("message", ""),
+            "stream": False
+        }
+        
+        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            response = await client.post(
+                AI_AGENT_URL,
+                json=ollama_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if response.status_code == 200:
+                ollama_response = response.json()
+                return {
+                    "response": ollama_response.get("response", ""),
+                    "model": ollama_response.get("model", "qwen:0.5b"),
+                    "timestamp": datetime.now().isoformat()
+                }
+            else:
+                return {
+                    "response": "Imperial AI is currently optimizing. Please try again.",
+                    "model": "fallback",
+                    "timestamp": datetime.now().isoformat()
+                }
+    except Exception as e:
+        return {
+            "response": "I'm here to assist with your enterprise queries.",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+# Enhanced Imperial Chat with business context
+@app.post("/ai/imperial-chat")
+async def imperial_ai_chat(user_message: str):
+    """Enhanced AI chat with Imperial Truth context"""
+    try:
+        # Get imperial truth
+        imperial_context = await get_imperial_truth()
+        
+        sovereign_prompt = f"""You are the Imperial AI of Humbulani Mudau's enterprise.
+Current Imperial Truth:
+- Valuation: R{imperial_context['valuation']:,.2f}
+- Lithium Trend: {imperial_context['lithium_trend']}
+- Village Network: {imperial_context['villages']}/{imperial_context['target']} villages
+- Status: {imperial_context['status']}
+
+User Query: {user_message}
+
+Provide a helpful response as the Imperial AI assistant."""
+        
+        ollama_payload = {
+            "model": "qwen:0.5b",
+            "prompt": sovereign_prompt,
+            "stream": False
+        }
+        
+        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            response = await client.post(
+                AI_AGENT_URL,
+                json=ollama_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if response.status_code == 200:
+                ai_response = response.json()
+                return {
+                    "ai_response": ai_response.get("response", ""),
+                    "business_context": imperial_context,
+                    "timestamp": datetime.now().isoformat()
+                }
+            else:
+                return {
+                    "ai_response": "Imperial AI systems are processing your request.",
+                    "business_context": imperial_context,
+                    "timestamp": datetime.now().isoformat()
+                }
+    except Exception as e:
+        return {
+            "ai_response": "I'm here to assist with your enterprise questions.",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+# Serve AI chat as homepage
+@app.get("/", response_class=HTMLResponse)
+async def serve_chat_interface(auth=Depends(optional_auth)):
+    """Serve the AI chat interface as the main page"""
+    try:
+        with open("public/ai-chat.html", "r") as f:
             html_content = f.read()
-        return HTMLResponse(content=html_content, status_code=200)
+        return HTMLResponse(content=html_content)
     except FileNotFoundError:
         return HTMLResponse("""
         <!DOCTYPE html>
         <html>
-        <head><title>Humbu Imperial Business Brain - SECURE</title></head>
-        <body style="background: #0d1117; color: white; font-family: monospace; padding: 40px;">
-            <h1>🏛️ HUMBU IMPERIAL BUSINESS BRAIN</h1>
-            <p>CEO: Humbulani Mudau | System: 17-port Imperial Stack</p>
-            <p>🔒 Dashboard is secured with Imperial Gatekeeper</p>
-            <p>🚀 Authentication successful. Loading dashboard...</p>
+        <head><title>Imperial AI Nexus</title></head>
+        <body style="font-family: monospace; padding: 40px; background: #0d1117; color: white;">
+            <h1>🤖 Imperial AI Nexus</h1>
+            <p>Chat interface loading... Please refresh.</p>
         </body>
         </html>
         """)
 
-# Public health check endpoint (No authentication required)
+# Health check endpoint
 @app.get("/health")
-async def health_check() -> Dict[str, Any]:
-    """
-    Public Business Brain health check
-    Returns system status without sensitive data
-    """
-    health_status = {
+async def health_check():
+    return {
         "status": "healthy",
-        "secured": True,
-        "gatekeeper": "active",
-        "timestamp": datetime.utcnow().isoformat(),
-        "checks": {
-            "api": "operational",
-            "authentication": "enabled",
-            "imperial_integration": "17/17 ports",
-            "github_sync": "active",
-            "render_deployment": "live"
-        },
-        "system": {
-            "name": "Humbu Imperial Business Brain",
-            "version": "2.1.0",
-            "status": "secured",
-            "uptime": "100.0%"
-        },
-        "note": "Imperial Dashboard requires CEO authentication"
-    }
-    logger.info(f"Public health check requested at {health_status['timestamp']}")
-    return health_status
-
-# Imperial System Status (Protected)
-@app.get("/api/imperial/status", dependencies=[Depends(get_current_username)])
-async def imperial_status():
-    """
-    Returns status of the 17-port Imperial System
-    PROTECTED ENDPOINT - CEO Access Only
-    """
-    status = {
-        "timestamp": datetime.utcnow().isoformat(),
-        "system": "Humbu Imperial Nexus",
-        "ceo": "Humbulani Mudau",
-        "total_ports": 17,
-        "online_ports": 17,
-        "status": "fully_operational",
-        "security_level": "gatekeeper_active",
-        "ports": [
-            {"port": 8000, "service": "Business API (Render)", "status": "online"},
-            {"port": 8082, "service": "Imperial Dashboard (UI)", "status": "online"},
-            {"port": 8084, "service": "Enterprise Platform (API)", "status": "online"},
-            {"port": 11434, "service": "Ollama AI (DeepSeek)", "status": "online"},
-            {"port": 8888, "service": "System Node", "status": "online"},
-            {"port": 1880, "service": "Node-RED (Automation)", "status": "online"},
-            {"port": 8086, "service": "Apex Metrics (Werkzeug)", "status": "online"},
-            {"port": 8087, "service": "USSD Seller Portal", "status": "online"},
-            {"port": 8090, "service": "Real-time Monitor", "status": "online"},
-            {"port": 8085, "service": "Legacy Vault", "status": "online"},
-            {"port": 8095, "service": "Cloud File Manager", "status": "online"},
-            {"port": 8080, "service": "Secondary Proxy", "status": "online"},
-            {"port": 8083, "service": "Redundant Node", "status": "online"},
-            {"port": 8103, "service": "Market Intel (Alpha)", "status": "online"},
-            {"port": 8089, "service": "Market Intel (Files)", "status": "online"},
-            {"port": 8102, "service": "Urban Gateway (Gauteng)", "status": "online"},
-            {"port": 8099, "service": "B2B Scaling Hub", "status": "online"}
-        ],
-        "financial_summary": {
-            "portfolio_value": 10110466.32,
-            "currency": "ZAR",
-            "daily_velocity": 25000.00,
-            "monthly_target": 28660.03,
-            "progress": 100.0
-        },
-        "council_expansion": {
-            "thohoyandou": {"members": 176, "status": "active"},
-            "malamulele": {"members": 92, "launch_date": "2026-01-30", "status": "ready"},
-            "sibasa": {"members": 84, "launch_date": "2026-01-31", "status": "ready"},
-            "total_by_feb1": 352
-        }
-    }
-    return status
-
-# Market Intelligence Summary (Protected)
-@app.get("/api/market/intelligence", dependencies=[Depends(get_current_username)])
-async def market_intelligence():
-    """
-    Market intelligence data from Port 8103
-    PROTECTED ENDPOINT - CEO Access Only
-    """
-    return {
-        "timestamp": datetime.utcnow().isoformat(),
-        "aviation_surge": 8.7,
-        "google_views": 8300,
-        "recent_engagement": 990,
-        "village_expansion_alert": True,
-        "predictive_advantage_hours": 24,
-        "luxury_engagement_locations": [
-            "MGB Hotel at 2Ten",
-            "Massana Village Lodge (934 views)"
-        ]
+        "service": "Imperial AI Nexus",
+        "version": "3.0.0",
+        "timestamp": datetime.now().isoformat()
     }
 
-# GitHub deployment info (Protected)
-@app.get("/api/deployment/info", dependencies=[Depends(get_current_username)])
-async def deployment_info():
-    """
-    GitHub → Render deployment information
-    PROTECTED ENDPOINT - CEO Access Only
-    """
-    return {
-        "repository": "github.com/Ondwe/fastapi-mobile-app",
-        "branch": "main",
-        "last_deployment": datetime.utcnow().isoformat(),
-        "platform": "Render",
-        "url": "https://fastapi-mobile-app.onrender.com",
-        "health_endpoint": "GET /health",
-        "dashboard": "GET / (CEO Auth Required)"
-    }
-
-# CEO Contact Information (Protected)
-@app.get("/api/ceo/info", dependencies=[Depends(get_current_username)])
-async def ceo_info():
-    """
-    CEO contact information
-    PROTECTED ENDPOINT - CEO Access Only
-    """
-    return {
-        "name": "Humbulani Mudau",
-        "title": "CEO, Humbu Imperial Nexus",
-        "contact": "079 465 8481",
-        "response_time": "<2 hours",
-        "portfolio_responsibility": "R10,235,466.32",
-        "council_oversight": 352,
-        "access_level": "imperial_full"
-    }
-
-# Error handler for 401
-@app.exception_handler(401)
-async def unauthorized_handler(request, exc):
-    """
-    Custom 401 handler for Imperial Gatekeeper
-    """
-    return JSONResponse(
-        status_code=401,
-        content={
-            "message": "Imperial Access Denied",
-            "detail": "Valid CEO credentials required",
-            "realm": "Imperial Nexus",
-            "contact": "CEO: Humbulani Mudau",
-            "authentication": "Basic auth required"
-        },
-        headers={"WWW-Authenticate": "Basic realm='Imperial Nexus'"}
-    )
-
-# Error handler for 404
-@app.exception_handler(404)
-async def not_found_handler(request, exc):
-    """
-    Custom 404 handler that respects authentication
-    """
-    return JSONResponse(
-        status_code=404,
-        content={
-            "message": "Imperial resource not found",
-            "redirect": "/",
-            "authentication": "CEO credentials required for dashboard",
-            "public_endpoint": "GET /health"
-        }
-    )
-
-# Application startup event
-@app.on_event("startup")
-async def startup_event():
-    """
-    Business Brain startup sequence with Gatekeeper
-    """
-    logger.info("🏛️ HUMBU IMPERIAL BUSINESS BRAIN - SECURE MODE")
-    logger.info("🔒 Imperial Gatekeeper: ACTIVE")
-    logger.info("👑 Authorized CEO: Humbulani Mudau")
-    logger.info("💰 Portfolio: R10,235,466.32")
-    logger.info("🏛️ System: 17-port Imperial Stack (Secured)")
-    logger.info("🌐 GitHub: github.com/Ondwe/fastapi-mobile-app")
-    logger.info("🛡️ Dashboard: Protected with Basic Authentication")
-
-# Application shutdown event
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Business Brain shutdown sequence
-    """
-    logger.info("🔒 Imperial Gatekeeper shutting down gracefully")
+# Legacy dashboard redirect
+@app.get("/dashboard")
+async def legacy_dashboard():
+    return HTMLResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head><meta http-equiv="refresh" content="0; url=/" /></head>
+    <body>Redirecting to Imperial AI Chat...</body>
+    </html>
+    """)
 
 if __name__ == "__main__":
     import uvicorn
