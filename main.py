@@ -47,7 +47,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # AI Agent Configuration
-AI_AGENT_URL = "http://localhost:11434/api/generate"  # Ollama endpoint
+AI_AGENT_URL = "https://ai.humbu.store/api/generate"  # Ollama endpoint
 TIMEOUT = 30.0
 
 # Imperial Truth endpoint
