@@ -53,3 +53,12 @@ recovered_emails.txt
 *.sh.broken
 *.sh.TODAYS_BROKEN
 *.sh.BACKUP*
+.env
+__pycache__/
+*.token
+*.json
+nohup.out
+# Imperial Financials & Reports
+dawn_report_clean.txt
+dawn_report.html
+instance/imperial.db

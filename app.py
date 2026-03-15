@@ -356,12 +356,6 @@ def api_admin_keys():
 
 
 
-@app.route('/notification-settings')
-@login_required
-def notification_settings():
-    return render_template('notification_settings.html')
-
-
 # ==================== USSD & BUSINESS ROUTES ====================
 
 @app.route('/ai/dashboard')
@@ -475,7 +469,12 @@ def generate_humbu_key():
     db.session.commit()
     return jsonify({'status': 'success', 'key': new_key, 'owner': 'Humbulani Mudau'})
 
+@app.route("/api/v1/write", methods=["POST"])
+def prometheus_write():
+    return "", 204
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True, host="0.0.0.0", port=8000)
+
