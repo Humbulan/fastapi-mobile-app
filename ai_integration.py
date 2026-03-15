@@ -171,3 +171,91 @@ async def ai_business_chat(user_message: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8118)
+
+# Imperial Strategy Model Constants
+TARGET_VILLAGES = 900
+CURRENT_VILLAGES = 43
+LITHIUM_TREND = 0.297  # +29.7%
+BASE_VALUATION = 269905078380.45
+MONTHS_LEFT = 9.5  # Mid-March to December 31
+
+async def fetch_imperial_strategy():
+    """Calculate dynamic strategy metrics"""
+    truth = await fetch_imperial_truth()
+    
+    # Calculate adjusted valuation with lithium surge
+    adjusted_valuation = BASE_VALUATION * (1 + LITHIUM_TREND)
+    
+    # Calculate required velocity
+    villages_needed = TARGET_VILLAGES - CURRENT_VILLAGES
+    required_velocity = villages_needed / MONTHS_LEFT
+    daily_velocity = required_velocity / 30  # Approximate daily target
+    
+    return {
+        **truth,
+        "strategy": {
+            "base_valuation": BASE_VALUATION,
+            "adjusted_valuation": adjusted_valuation,
+            "lithium_gain": adjusted_valuation - BASE_VALUATION,
+            "villages_needed": villages_needed,
+            "required_velocity": round(required_velocity, 2),
+            "daily_target": round(daily_velocity, 2),
+            "months_left": MONTHS_LEFT,
+            "target_date": "2026-12-31"
+        }
+    }
+
+# Update the integration status endpoint to show strategy
+@app.get("/integration/status")
+async def integration_status():
+    """Integration status with imperial strategy"""
+    strategy = await fetch_imperial_strategy()
+    return {
+        "business_api": "✅ Operational (v7.0.0)",
+        "mobile_app_api": "✅ Running on Render",
+        "ai_agent": "✅ Operational",
+        "imperial_truth": strategy,
+        "strategy_alert": {
+            "valuation_potential": f"R{strategy['strategy']['adjusted_valuation']:,.2f}",
+            "required_pace": f"{strategy['strategy']['required_velocity']} villages/month",
+            "daily_target": f"{strategy['strategy']['daily_target']} villages/day",
+            "villages_to_go": strategy['strategy']['villages_needed'],
+            "deadline": "December 31, 2026"
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+
+# Add a new endpoint for strategy dashboard
+@app.get("/strategy/dashboard")
+async def strategy_dashboard():
+    """Imperial strategy dashboard with growth metrics"""
+    strategy = await fetch_imperial_strategy()
+    s = strategy['strategy']
+    
+    return {
+        "imperial_strategy": {
+            "valuation": {
+                "current": f"R{s['base_valuation']:,.2f}",
+                "lithium_adjusted": f"R{s['adjusted_valuation']:,.2f}",
+                "potential_gain": f"R{s['lithium_gain']:,.2f}",
+                "growth_multiple": f"{(1 + LITHIUM_TREND):.2f}x"
+            },
+            "village_expansion": {
+                "current": CURRENT_VILLAGES,
+                "target": TARGET_VILLAGES,
+                "needed": s['villages_needed'],
+                "required_velocity": f"{s['required_velocity']}/month",
+                "daily_target": f"{s['daily_target']}/day",
+                "months_remaining": s['months_left']
+            },
+            "challenge_metrics": {
+                "pace_increase": "600%",
+                "villages_per_day_needed": 3.0,
+                "current_pace": 0.5,
+                "acceleration_factor": 6.0
+            },
+            "deadline": "2026-12-31",
+            "status": "CRITICAL MASS REQUIRED"
+        },
+        "timestamp": datetime.now().isoformat()
+    }
