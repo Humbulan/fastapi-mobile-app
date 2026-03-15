@@ -69,7 +69,7 @@ async def ai_chat(message_data: dict):
     """Public AI chat endpoint"""
     try:
         ollama_payload = {
-            "model": "qwen:0.5b",
+            "model": "qwen2.5:1.5b",
             "prompt": message_data.get("message", ""),
             "stream": False
         }
@@ -121,7 +121,7 @@ User Query: {user_message}
 Provide a helpful response as the Imperial AI assistant."""
         
         ollama_payload = {
-            "model": "qwen:0.5b",
+            "model": "qwen2.5:1.5b",
             "prompt": sovereign_prompt,
             "stream": False
         }

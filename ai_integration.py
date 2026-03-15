@@ -49,7 +49,7 @@ async def ai_health_check():
     return {
         "status": "healthy",
         "service": "AI Proxy",
-        "model": "qwen:0.5b",
+        "model": "qwen2.5:1.5b",
         "timestamp": datetime.now().isoformat()
     }
 
@@ -70,7 +70,7 @@ async def ai_proxy(payload: dict):
     """Proxy endpoint that forwards requests to Ollama"""
     try:
         ollama_payload = {
-            "model": "qwen:0.5b",
+            "model": "qwen2.5:1.5b",
             "prompt": payload.get("prompt", ""),
             "stream": False
         }
@@ -101,7 +101,7 @@ User Query: {user_message}"""
     
     try:
         ollama_payload = {
-            "model": "qwen:0.5b",
+            "model": "qwen2.5:1.5b",
             "prompt": sovereign_prompt,
             "stream": False
         }
@@ -139,7 +139,7 @@ async def ai_business_chat(user_message: str):
     
     try:
         ollama_payload = {
-            "model": "qwen:0.5b",
+            "model": "qwen2.5:1.5b",
             "prompt": f"Business query: {user_message}\nContext: {imperial_context}",
             "stream": False
         }
