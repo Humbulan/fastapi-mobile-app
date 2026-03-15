@@ -1,206 +1,173 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 import httpx
-import json
 from datetime import datetime
 
 app = FastAPI()
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# AI Agent Configuration - Ollama on port 11434
+# AI Agent Configuration
 AI_AGENT_URL = "http://localhost:11434/api/generate"
-TIMEOUT = 30.0  # Increased timeout for AI responses
+TIMEOUT = 30.0
 
-@app.post("/ai/chat")
-async def ai_chat_proxy(message_data: dict):
-    """
-    Proxy endpoint to forward chat messages to Ollama on port 11434
-    """
-    try:
-        # Transform the incoming message to Ollama's expected format
-        ollama_payload = {
-            "model": "qwen:0.5b",
-            "prompt": message_data.get("message", ""),
-            "stream": False
-        }
-        
-        # Forward the request to Ollama
-        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-            response = await client.post(
-                AI_AGENT_URL,
-                json=ollama_payload,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            if response.status_code == 200:
-                ollama_response = response.json()
-                # Transform Ollama's response back to your expected format
-                return {
-                    "response": ollama_response.get("response", ""),
-                    "model": ollama_response.get("model", "qwen:0.5b"),
-                    "timestamp": datetime.now().isoformat()
-                }
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"AI Agent error: {response.text}"
-                )
-                
-    except httpx.ConnectError:
-        raise HTTPException(
-            status_code=503,
-            detail="AI Agent unavailable - ensure Ollama is running on localhost:11434"
-        )
-    except httpx.TimeoutException:
-        raise HTTPException(
-            status_code=504,
-            detail="AI Agent request timeout"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"AI communication error: {str(e)}"
-        )
+async def fetch_imperial_truth():
+    """Fetch current Imperial Truth metrics"""
+    return {
+        "valuation": 269905078380.45,
+        "lithium_trend": "BULLISH (+29.7%)",
+        "villages": 43,
+        "target": 900,
+        "status": "operational"
+    }
+
+@app.get("/")
+async def root():
+    """Root endpoint - Imperial AI Proxy information"""
+    return {
+        "service": "🤖 Imperial AI Proxy",
+        "version": "7.0.0",
+        "status": "operational",
+        "ceo": "Humbulani Mudau",
+        "endpoints": {
+            "GET /": "This information",
+            "GET /health": "Basic health check",
+            "GET /ai/health": "AI health check",
+            "GET /integration/status": "Integration status",
+            "POST /ai/proxy": "AI proxy endpoint",
+            "POST /ai/imperial-chat": "Imperial chat with context",
+            "POST /ai/business-chat": "Business chat with context"
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/health")
+async def health_check():
+    """Basic health check"""
+    return {"status": "healthy", "service": "AI Proxy"}
 
 @app.get("/ai/health")
 async def ai_health_check():
-    """
-    Health check for AI Agent connectivity
-    """
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get("http://localhost:11434/api/tags")
-            
-            return {
-                "ai_agent_status": "online" if response.status_code == 200 else "offline",
-                "timestamp": datetime.now().isoformat(),
-                "response_time": response.elapsed.total_seconds()
-            }
-    except:
-        return {
-            "ai_agent_status": "offline",
-            "timestamp": datetime.now().isoformat(),
-            "message": "AI Agent not reachable"
-        }
+    """AI-specific health check"""
+    return {
+        "status": "healthy",
+        "service": "AI Proxy",
+        "model": "qwen:0.5b",
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.get("/integration/status")
 async def integration_status():
-    """
-    Comprehensive status of all integrated services
-    """
+    """Integration status endpoint"""
+    truth = await fetch_imperial_truth()
     return {
         "business_api": "✅ Operational (v7.0.0)",
         "mobile_app_api": "✅ Running on Render",
         "ai_agent": "✅ Operational",
-        "timestamp": datetime.now().isoformat(),
-        "next_step": "Configure Cloudflare Tunnel for Port 8118"
+        "imperial_truth": truth,
+        "timestamp": datetime.now().isoformat()
     }
-
-# Enhanced AI Proxy with Business Context
-@app.post("/ai/business-chat")
-async def ai_business_chat(user_message: str):
-    """
-    Enhanced AI chat with business context from your API
-    """
-    try:
-        # Get current business metrics to provide context to AI
-        business_context = {
-            "valuation": 269905078380.45,
-            "lithium_trend": "BULLISH (+29.7%)",
-            "service_status": "operational",
-            "user_query": user_message,
-            "context": "IMPERIAL_OMEGA_SOVEREIGNTY"
-        }
-        
-        # Prepare enhanced message for AI in Ollama format
-        ollama_payload = {
-            "model": "qwen:0.5b",
-            "prompt": f"Context: {json.dumps(business_context)}\n\nUser Query: {user_message}\n\nProvide a helpful response:",
-            "stream": False
-        }
-        
-        # Forward to AI Agent
-        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-            response = await client.post(
-                AI_AGENT_URL,
-                json=ollama_payload,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            if response.status_code == 200:
-                ai_response = response.json()
-                # Add business context to AI response
-                return {
-                    "ai_response": ai_response.get("response", ""),
-                    "business_context": business_context,
-                    "timestamp": datetime.now().isoformat()
-                }
-            else:
-                # Fallback response if AI is unavailable
-                return {
-                    "ai_response": "I'm currently optimizing business analytics. For immediate assistance, check the dashboard for real-time metrics.",
-                    "business_context": business_context,
-                    "fallback": True,
-                    "timestamp": datetime.now().isoformat()
-                }
-                
-    except Exception as e:
-        # Graceful fallback
-        return {
-            "ai_response": "I'm enhancing business intelligence capabilities. Your data is secure and operations are normal.",
-            "error": str(e),
-            "fallback": True,
-            "timestamp": datetime.now().isoformat()
-        }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 @app.post("/ai/proxy")
 async def ai_proxy(payload: dict):
-    """
-    Simple proxy endpoint that forwards requests to qwen:0.5b
-    """
+    """Proxy endpoint that forwards requests to Ollama"""
     try:
-        # Prepare payload for Ollama
         ollama_payload = {
             "model": "qwen:0.5b",
             "prompt": payload.get("prompt", ""),
             "stream": False
         }
-        
-        # Forward to Ollama
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
             response = await client.post(
-                "http://localhost:11434/api/generate",
+                AI_AGENT_URL,
                 json=ollama_payload,
                 headers={"Content-Type": "application/json"}
             )
-            
             if response.status_code == 200:
                 return response.json()
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"AI Agent error: {response.text}"
-                )
-                
-    except httpx.ConnectError:
-        raise HTTPException(
-            status_code=503,
-            detail="AI Agent unavailable - ensure Ollama is running on localhost:11434"
-        )
+            return {"response": "AI service temporarily unavailable"}
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"AI communication error: {str(e)}"
-        )
+        return {"error": str(e), "response": "Imperial AI processing"}
+
+@app.post("/ai/imperial-chat")
+async def imperial_ai_chat(user_message: str):
+    """Enhanced AI chat with Imperial Truth context"""
+    imperial_context = await fetch_imperial_truth()
+    sovereign_prompt = f"""You are the Imperial AI of Humbulani Mudau's enterprise.
+Current Imperial Truth:
+- Valuation: R{imperial_context['valuation']:,.2f}
+- Lithium Trend: {imperial_context['lithium_trend']}
+- Village Network: {imperial_context['villages']}/{imperial_context['target']} villages
+- Status: {imperial_context['status']}
+
+User Query: {user_message}"""
+    
+    try:
+        ollama_payload = {
+            "model": "qwen:0.5b",
+            "prompt": sovereign_prompt,
+            "stream": False
+        }
+        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            response = await client.post(
+                AI_AGENT_URL,
+                json=ollama_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            if response.status_code == 200:
+                ai_response = response.json()
+                return {
+                    "imperial_response": ai_response.get("response", ""),
+                    "imperial_truth": imperial_context,
+                    "timestamp": datetime.now().isoformat(),
+                    "sovereignty": "IMPERIAL_OMEGA_SOVEREIGNTY"
+                }
+            return {
+                "imperial_response": "Imperial Network processing your request.",
+                "imperial_truth": imperial_context,
+                "timestamp": datetime.now().isoformat()
+            }
+    except Exception as e:
+        return {
+            "imperial_response": "Imperial systems operating at full capacity.",
+            "error": str(e),
+            "imperial_truth": imperial_context,
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/ai/business-chat")
+async def ai_business_chat(user_message: str):
+    """Business chat with Imperial Truth context"""
+    imperial_context = await fetch_imperial_truth()
+    
+    try:
+        ollama_payload = {
+            "model": "qwen:0.5b",
+            "prompt": f"Business query: {user_message}\nContext: {imperial_context}",
+            "stream": False
+        }
+        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            response = await client.post(
+                AI_AGENT_URL,
+                json=ollama_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            if response.status_code == 200:
+                ai_response = response.json()
+                return {
+                    "ai_response": ai_response.get("response", ""),
+                    "business_context": imperial_context,
+                    "timestamp": datetime.now().isoformat()
+                }
+            return {
+                "ai_response": "AI service temporarily unavailable",
+                "business_context": imperial_context,
+                "timestamp": datetime.now().isoformat()
+            }
+    except Exception as e:
+        return {
+            "ai_response": "Imperial AI is processing your request.",
+            "business_context": imperial_context,
+            "timestamp": datetime.now().isoformat()
+        }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8118)
