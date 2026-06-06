@@ -1,22 +1,14 @@
-#!/usr/bin/env python3
-import os
-import re
+with open('app.py', 'r') as f:
+    lines = f.readlines()
 
-# Path to the importing.py file
-file_path = 'google-cloud-sdk/lib/googlecloudsdk/core/util/importing.py'
+new_lines = []
+for line in lines:
+    if 'from flask import' in line:
+        # Ensure all necessary tools are imported
+        line = "from flask import Flask, render_template, redirect, url_for, request, jsonify\n"
+    new_lines.append(line)
 
-# Read the file
-with open(file_path, 'r') as f:
-    content = f.read()
+with open('app.py', 'w') as f:
+    f.writelines(new_lines)
 
-# Replace the imp import with our compatibility module
-new_content = content.replace(
-    'import imp',
-    'from googlecloudsdk.core.util import imp_compat as imp'
-)
-
-# Write back
-with open(file_path, 'w') as f:
-    f.write(new_content)
-
-print("Fixed importing.py to use imp_compat")
+print("✅ Imports Unified. Imperial Engine Ready.")

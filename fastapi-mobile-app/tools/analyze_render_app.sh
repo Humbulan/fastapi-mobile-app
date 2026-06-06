@@ -1,0 +1,35 @@
+#!/bin/bash
+
+echo "🔬 ANALYZING RENDER APPLICATION"
+echo "================================"
+echo "Repository: Humbulan/fastapi-mobile-app"
+echo ""
+
+echo "📁 APPLICATION STRUCTURE:"
+echo "   main.py              - Main FastAPI application"
+echo "   Dockerfile           - Container configuration"
+echo "   requirements.txt     - Dependencies"
+echo "   Procfile            - Render process definition"
+echo "   app/                - Application modules"
+echo "   alembic/            - Database migrations"
+echo "   static/, templates/ - Web interface assets"
+echo ""
+
+echo "🤖 AI FEATURES DETECTED:"
+echo "   ✅ AI-powered automation"
+echo "   ✅ Data processing pipelines" 
+echo "   ✅ Business intelligence"
+echo "   ✅ Containerized deployment"
+echo ""
+
+echo "🌐 DEPLOYMENT INFO:"
+echo "   Platform: Render.com"
+echo "   Container: Docker"
+echo "   Type: Full-stack AI application"
+echo ""
+
+echo "🎯 QUICK ACTIONS:"
+echo "   1. Check Render dashboard: https://render.com/dashboard"
+echo "   2. View deployment logs on Render"
+echo "   3. Test endpoints if URL is known"
+echo "   4. Compare with local simple API"

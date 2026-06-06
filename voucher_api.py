@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """
-🌐 Voucher API Server - Connects website to voucher system
-Run on port 8098 or similar
+Voucher API Service - Port 8098
+Handles voucher activation and management for Imperial Omega
 """
 from flask import Flask, request, jsonify, render_template_string
-from voucher_system import VoucherSystem
 import json
+import os
+from datetime import datetime
+import logging
 
 app = Flask(__name__)
-vs = VoucherSystem()
 
-# Simple HTML form for testing
-HTML_FORM = '''
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# HTML template for the root page
+HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -55,63 +60,109 @@ HTML_FORM = '''
 </html>
 '''
 
+def load_vouchers():
+    """Load vouchers from JSON file"""
+    try:
+        with open('/data/data/com.termux/files/home/imperial_network/vouchers.json') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.error("Vouchers file not found")
+        return {}
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in vouchers file")
+        return {}
+
+def save_vouchers(vouchers):
+    """Save vouchers to JSON file"""
+    with open('/data/data/com.termux/files/home/imperial_network/vouchers.json', 'w') as f:
+        json.dump(vouchers, f, indent=2)
+
 @app.route('/')
-def home():
-    return HTML_FORM
+def index():
+    """Serve the activation page"""
+    return render_template_string(HTML_TEMPLATE)
 
 @app.route('/api/activate', methods=['POST'])
 def activate():
-    data = request.json
-    code = data.get('code', '').strip().upper()
+    """Activate a voucher code"""
+    data = request.get_json()
+    code = data.get('code', '').upper().strip()
     
-    # Remove any spaces and format
-    code = code.replace(' ', '')
-    if len(code) == 8:
-        code = f"{code[:4]}-{code[4:]}"
+    vouchers = load_vouchers()
     
-    result = vs.use_voucher(code, ip_address=request.remote_addr)
-    
-    if result.get('success'):
-        return jsonify({'success': True, 'message': f'Activated! You have {result["minutes"]} minutes of AI access.'})
+    if code in vouchers:
+        voucher = vouchers[code]
+        if voucher.get('status') == 'active':
+            # Mark as used
+            voucher['status'] = 'used'
+            voucher['redeemed_at'] = datetime.now().isoformat()
+            save_vouchers(vouchers)
+            return jsonify({
+                'success': True,
+                'message': f'Voucher activated! Value: R{voucher["value"]}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Voucher already used or expired'
+            })
     else:
-        return jsonify({'success': False, 'message': result.get('reason', 'Invalid code')})
+        return jsonify({
+            'success': False,
+            'message': 'Invalid code'
+        })
 
 @app.route('/api/validate', methods=['POST'])
 def validate():
-    data = request.json
-    code = data.get('code', '').strip().upper()
-    code = code.replace(' ', '')
-    if len(code) == 8:
-        code = f"{code[:4]}-{code[4:]}"
+    """Validate a voucher without activating"""
+    data = request.get_json()
+    code = data.get('code', '').upper().strip()
     
-    result = vs.validate_voucher(code)
-    if result.get('valid'):
-        return jsonify({'valid': True, 'value': result['value']})
+    vouchers = load_vouchers()
+    
+    if code in vouchers:
+        voucher = vouchers[code]
+        return jsonify({
+            'valid': voucher.get('status') == 'active',
+            'value': voucher.get('value', 0),
+            'status': voucher.get('status')
+        })
     else:
-        return jsonify({'valid': False, 'reason': result.get('reason', 'Invalid')})
+        return jsonify({'valid': False})
+
+@app.route('/api/vouchers', methods=['GET'])
+def get_vouchers():
+    """Return all vouchers (for internal use)"""
+    vouchers = load_vouchers()
+    return jsonify(vouchers)
 
 @app.route('/api/stats')
 def stats():
-    return jsonify(vs.get_stats())
+    """Return voucher statistics"""
+    vouchers = load_vouchers()
+    total = len(vouchers)
+    active = sum(1 for v in vouchers.values() if v.get('status') == 'active')
+    used = sum(1 for v in vouchers.values() if v.get('status') == 'used')
+    total_value = sum(v.get('value', 0) for v in vouchers.values())
+    
+    return jsonify({
+        'total_vouchers': total,
+        'active': active,
+        'used': used,
+        'total_value': total_value,
+        'timestamp': datetime.now().isoformat()
+    })
+
+@app.route('/api/health')
+def health():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'port': 8098,
+        'service': 'voucher-api',
+        'timestamp': datetime.now().isoformat()
+    })
 
 if __name__ == '__main__':
-    print("🎫 Voucher API Server running on port 8098")
-    print("   Use this for AI voucher activation")
-    app.run(host='0.0.0.0', port=8098, debug=False)
-
-@app.route('/api/create-voucher', methods=['POST'])
-def create_voucher_from_payment():
-    """Create a voucher after successful Yoco payment"""
-    data = request.json
-    payment_id = data.get('paymentId')
-    
-    # Create a new voucher
-    code = vs.create_voucher(20, 30)
-    # Add notes about payment
-    conn = sqlite3.connect('vouchers.db')
-    c = conn.cursor()
-    c.execute("UPDATE vouchers SET notes=? WHERE code=?", (f'Yoco payment {payment_id}', code))
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True, 'code': code})
+    print("🎫 Voucher API Service starting on port 8098...")
+    app.run(host='127.0.0.1', port=8098, debug=False)

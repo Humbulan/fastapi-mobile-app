@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Imperial AI Nexus - Humbulani Mudau</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .chat-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .imperial-stats {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 0.9rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1rem;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+        
+        .user-message {
+            justify-content: flex-end;
+        }
+        
+        .ai-message {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .user-message .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .ai-message .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #user-input:focus {
+            border-color: #667eea;
+        }
+        
+        #send-button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        #send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        #send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .typing-indicator {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Imperial AI Nexus</h1>
+            <p>Humbulani Mudau's Enterprise Intelligence</p>
+        </div>
+        
+        <div class="imperial-stats">
+            <div class="stat-item">
+                <div class="stat-label">Valuation</div>
+                <div class="stat-value" id="valuation">R269.9B</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Lithium</div>
+                <div class="stat-value" id="lithium">+29.7%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Villages</div>
+                <div class="stat-value" id="villages">43/900</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" id="status">🟢 Operational</div>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message ai-message">
+                <div class="message-content">
+                    <div>👋 Welcome to the Imperial AI Nexus. I'm your enterprise intelligence assistant. How can I help you today?</div>
+                    <div class="message-time">Just now</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <input type="text" id="user-input" placeholder="Ask about valuation, lithium trends, village expansion..." autocomplete="off">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        
+        // Imperial Truth metrics
+        let imperialMetrics = {
+            valuation: 269905078380.45,
+            lithium_trend: 'BULLISH (+29.7%)',
+            villages: 43,
+            target: 900,
+            status: 'Operational'
+        };
+        
+        // Fetch imperial truth on load
+        async function fetchImperialTruth() {
+            try {
+                const response = await fetch('/api/imperial/truth');
+                if (response.ok) {
+                    const data = await response.json();
+                    imperialMetrics = data;
+                    updateStats();
+                }
+            } catch (error) {
+                console.log('Using cached imperial truth');
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('valuation').textContent = 
+                `R${(imperialMetrics.valuation / 1e9).toFixed(1)}B`;
+            document.getElementById('lithium').textContent = 
+                imperialMetrics.lithium_trend.split(' ')[1] || '+29.7%';
+            document.getElementById('villages').textContent = 
+                `${imperialMetrics.villages}/${imperialMetrics.target}`;
+        }
+        
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            const textDiv = document.createElement('div');
+            textDiv.textContent = message;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            contentDiv.appendChild(textDiv);
+            contentDiv.appendChild(timeDiv);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message ai-message';
+            indicator.id = 'typing-indicator';
+            indicator.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            chatMessages.appendChild(indicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+        
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, true);
+            userInput.value = '';
+            sendButton.disabled = true;
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                // Use the enhanced imperial chat endpoint
+                const response = await fetch(`/ai/imperial-chat?user_message=${encodeURIComponent(message)}`);
+                const data = await response.json();
+                
+                removeTypingIndicator();
+                
+                if (data.ai_response) {
+                    addMessage(data.ai_response);
+                } else {
+                    addMessage('Imperial AI is processing. Please try again.');
+                }
+                
+                // Update metrics if provided
+                if (data.business_context) {
+                    imperialMetrics = data.business_context;
+                    updateStats();
+                }
+                
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('Connection to Imperial AI temporarily unavailable. Using cached intelligence.');
+                console.error('Chat error:', error);
+            } finally {
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        // Load imperial truth on start
+        fetchImperialTruth();
+        
+        // Refresh metrics every 30 seconds
+        setInterval(fetchImperialTruth, 30000);
+    </script>
+</body>
+</html>

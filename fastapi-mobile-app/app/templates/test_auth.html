@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test - FastAPI Mobile App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+        }
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        .form {
+            display: none;
+        }
+        .form.active {
+            display: block;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Back to Home</a>
+        <h2>🔐 Authentication Test</h2>
+        <p>Test the local registration and login endpoints</p>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('register')">Register</div>
+            <div class="tab" onclick="showTab('login')">Login</div>
+        </div>
+        
+        <form id="registerForm" class="form active">
+            <h3>Create Account</h3>
+            <input type="text" id="regUsername" placeholder="Username" required>
+            <input type="email" id="regEmail" placeholder="Email" required>
+            <input type="password" id="regPassword" placeholder="Password" required>
+            <input type="text" id="regFullName" placeholder="Full Name (optional)">
+            <button type="submit">Register</button>
+        </form>
+        
+        <form id="loginForm" class="form">
+            <h3>Login</h3>
+            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+        
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <strong>Test Credentials:</strong><br>
+            Username: testuser123<br>
+            Password: testpass123
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.form').forEach(form => form.classList.remove('active'));
+            
+            document.querySelector(`.tab:nth-child(${tabName === 'register' ? 1 : 2})`).classList.add('active');
+            document.getElementById(tabName + 'Form').classList.add('active');
+        }
+        
+        function showMessage(message, type) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.className = 'result ' + type;
+            result.style.display = 'block';
+        }
+        
+        // Registration form handler
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('regUsername').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                full_name: document.getElementById('regFullName').value
+            };
+            
+            try {
+                showMessage('🔄 Registering...', 'info');
+                
+                const response = await fetch('/api/local/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Registration failed');
+                }
+                
+                const data = await response.json();
+                showMessage(`✅ Registration successful! Welcome ${data.username}`, 'success');
+                console.log('Registration data:', data);
+                
+                // Clear form
+                e.target.reset();
+                
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+                console.error('Registration error:', error);
+            }
+        });
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const credentials = {
+                username: document.getElementById('loginUsername').value,
+                password: document.getElementById('loginPassword').value
+            };
+            
+            try {
+                showMessage('🔄 Logging in...', 'info');
+                
+                const response = await fetch('/api/local/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(credentials)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Login failed');
+                }
+                
+                const data = await response.json();
+                showMessage(`✅ Login successful! Welcome back ${data.username}`, 'success');
+                console.log('Login data:', data);
+                
+                // Store token
+                if (data.access_token) {
+                    localStorage.setItem('access_token', data.access_token);
+                    showMessage(`✅ Login successful! Token stored. Welcome ${data.username}`, 'success');
+                }
+                
+                // Clear form
+                e.target.reset();
+                
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+                console.error('Login error:', error);
+            }
+        });
+        
+        console.log('🔧 Auth test page loaded successfully');
+    </script>
+</body>
+</html>

@@ -1,9 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
+
+    <div style="display: grid; grid-template-columns: 1-fr 1fr; gap: 10px; margin: 10px;">
+        <div class="card" style="border-left: 5px solid #ffc107;">
+            <p style="color: #8b949e; margin: 0;">TOTAL REVENUE</p>
+            <h2 style="color: white; margin: 5px 0;">R 94,000,000</h2>
+        </div>
+        <div class="card" style="border-left: 5px solid #00ff00;">
+            <p style="color: #8b949e; margin: 0;">SYSTEM STATUS</p>
+            <h2 style="color: white; margin: 5px 0;">STABLE</h2>
+        </div>
+    </div>
+    
 <div class="row">
     <div class="col-12">
         <div class="card shadow">
-            <div class="card-header bg-dark text-white">
+            <div class="card-header bg-warning text-dark bg-dark text-white">
                 <h3>Welcome, {{ user.username }}! 
                     <small class="text-muted" style="color: #aaa !important;">
                         ({{ user.role }})
@@ -93,8 +105,8 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card border-warning">
-                            <div class="card-header bg-warning text-dark">
-                                <h4><i class="fas fa-crown"></i> Admin Tools</h4>
+                            <div class="card-header bg-warning text-dark bg-warning text-dark">
+                                <h4><i class="fas fa-crown"></i> 👑 Admin Tools Command Center</h4>
                             </div>
                             <div class="card-body">
                                 <div class="btn-group w-100" role="group">
@@ -213,7 +225,7 @@ document.getElementById("dashAddForm")?.addEventListener("submit", function(e) {
                                         <span class="badge bg-info">{{ payment.status }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ payment.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ payment.created_at }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

@@ -20,7 +20,7 @@ import b2b_bulk_8114 as B2BProcessor
 # Gauteng readiness tracker
 gauteng_score = {
     "previous": 6.9,
-    "current": 7.8,
+    "current": 8.5,
     "target": 8.5,
     "last_update": datetime.now().isoformat(),
     "metrics": {

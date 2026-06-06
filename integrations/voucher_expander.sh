@@ -1,28 +1,55 @@
 #!/bin/bash
-# Link RYQ1-C1GE vouchers to Nkomazi SEZ micro-projects
-
 echo "🚀 Linking Vouchers to Nkomazi SEZ - Budget 2026"
 echo "================================================"
+echo ""
 
-# Get current vouchers from Port 8098
-VOUCHERS=$(curl -s http://127.0.0.1:8098/api/vouchers)
-
-# Parse and apply Urban Contribution multiplier
-echo "$VOUCHERS" | python3 -c "
+# Fetch vouchers from API
+VOUCHERS=$(python3 << PYSCRIPT
+import requests
 import json
-import sys
+try:
+    response = requests.get('http://127.0.0.1:8098/api/vouchers')
+    vouchers = response.json()
+    print(json.dumps(vouchers))
+except Exception as e:
+    print('{}')
+PYSCRIPT
+)
 
-vouchers = json.loads('$VOUCHERS')
-print('\n📋 Original Vouchers:')
-for code, value in vouchers.items():
-    print(f'  {code}: R{value}')
+echo "📋 Original Vouchers:"
+TOTAL_ORIGINAL=0
+TOTAL_ENHANCED=0
 
-print('\n🏭 Applying Urban Contribution Multiplier (1.3x) for Nkomazi SEZ...')
-print('\n💰 Enhanced Vouchers:')
-for code, value in vouchers.items():
-    enhanced = value * 1.3
-    print(f'  {code}: R{value} → R{enhanced:.2f} (+30%)')
+# Process each voucher
+python3 << PYEOF
+import json
+vouchers = json.loads('''$VOUCHERS''')
+total_original = 0
+total_enhanced = 0
 
-print('\n✅ Vouchers linked to Nkomazi SEZ micro-projects')
-print('🔗 Integration complete - Ready for Budget 2026 claims')
-"
+print("📋 Original Vouchers:")
+for code, data in vouchers.items():
+    value = data.get('value', 0)
+    status = data.get('status', 'unknown')
+    # Only process active vouchers for display
+    if status == 'active':
+        print(f"  {code}: R{value:.2f}")
+        total_original += value
+
+print("\n🏭 Applying Urban Contribution Multiplier (1.3x) for Nkomazi SEZ...")
+print("\n💰 Enhanced Vouchers:")
+for code, data in vouchers.items():
+    value = data.get('value', 0)
+    status = data.get('status', 'unknown')
+    if status == 'active':
+        enhanced = value * 1.3
+        print(f"  {code}: R{value:.2f} → R{enhanced:.2f} (+30%)")
+        total_enhanced += enhanced
+
+print(f"\n📊 Summary:")
+print(f"  Total Original Value: R{total_original:.2f}")
+print(f"  Total Enhanced Value: R{total_enhanced:.2f}")
+print(f"  SEZ Contribution: R{total_enhanced - total_original:.2f}")
+print(f"\n✅ Vouchers linked to Nkomazi SEZ micro-projects")
+print(f"🔗 Integration complete - Ready for Budget 2026 claims")
+PYEOF

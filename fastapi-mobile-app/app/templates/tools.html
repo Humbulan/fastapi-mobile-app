@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tools - FastAPI Mobile App</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        .tool-section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .btn { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        textarea, input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        .result { background: #e9ecef; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ FastAPI Tools</h1>
+        
+        <!-- Text Tools Section -->
+        <div class="tool-section">
+            <h2>📝 Text Tools</h2>
+            <textarea id="text-input" placeholder="Enter text here..." rows="4">Hello World!</textarea>
+            <div>
+                <button class="btn" onclick="textTool('uppercase')">UPPERCASE</button>
+                <button class="btn" onclick="textTool('lowercase')">lowercase</button>
+                <button class="btn" onclick="textTool('reverse')">Reverse</button>
+                <button class="btn" onclick="textTool('title_case')">Title Case</button>
+                <button class="btn" onclick="textTool('word_count')">Word Count</button>
+            </div>
+            <div id="text-result" class="result"></div>
+        </div>
+
+        <!-- Calculator Section -->
+        <div class="tool-section">
+            <h2>🔢 Calculator</h2>
+            <input type="text" id="calc-input" placeholder="Enter expression (e.g., 10+5)" value="10+5">
+            <div>
+                <button class="btn" onclick="calculate()">Calculate</button>
+                <button class="btn" onclick="calculateAdd()">Add Numbers</button>
+                <button class="btn" onclick="calculateSqrt()">Square Root</button>
+            </div>
+            <div id="calc-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function textTool(operation) {
+            const text = document.getElementById('text-input').value;
+            const response = await fetch(`/api/text/${operation}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const result = await response.json();
+            document.getElementById('text-result').innerHTML = 
+                `<strong>Result:</strong> ${JSON.stringify(result, null, 2)}`;
+        }
+
+        async function calculate() {
+            const expression = document.getElementById('calc-input').value;
+            const response = await fetch('/api/calc/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ expression })
+            });
+            const result = await response.json();
+            document.getElementById('calc-result').innerHTML = 
+                `<strong>Result:</strong> ${JSON.stringify(result, null, 2)}`;
+        }
+
+        async function calculateAdd() {
+            const response = await fetch('/api/calc/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([10, 20, 30])
+            });
+            const result = await response.json();
+            document.getElementById('calc-result').innerHTML = 
+                `<strong>Result:</strong> ${JSON.stringify(result, null, 2)}`;
+        }
+
+        async function calculateSqrt() {
+            const response = await fetch('/api/calc/advanced/sqrt?value=25');
+            const result = await response.json();
+            document.getElementById('calc-result').innerHTML = 
+                `<strong>Result:</strong> ${JSON.stringify(result, null, 2)}`;
+        }
+    </script>
+</body>
+</html>

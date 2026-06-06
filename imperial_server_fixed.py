@@ -180,4 +180,4 @@ if __name__ == '__main__':
     print("✅ Vouchers only marked used AFTER valid AI response")
     print("🚀 Server running on port 8098")
     print("="*60 + "\n")
-    app.run(host='0.0.0.0', port=8098, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=8000, debug=False, threaded=True)

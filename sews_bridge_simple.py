@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🌉 SEWS BRIDGE - Simplified version for Port 8091
+🌉 SEWS BRIDGE - Simplified version for Port 8000
 Provides war/economic status to the Imperial Hub
 """
 from flask import Flask, jsonify
@@ -15,7 +15,7 @@ def index():
     return jsonify({
         'service': 'SEWS Bridge',
         'status': 'online',
-        'port': 8091,
+        'port': 8000,
         'endpoints': ['/status', '/api/status'],
         'timestamp': datetime.datetime.now().isoformat()
     })
@@ -55,5 +55,5 @@ def api_status():
     })
 
 if __name__ == '__main__':
-    print(f"🌉 SEWS Bridge starting on port 8091...")
-    app.run(host='0.0.0.0', port=8091, debug=False)
+    print(f"🌉 SEWS Bridge starting on port 8000...")
+    app.run(host='0.0.0.0', port=8000, debug=False)

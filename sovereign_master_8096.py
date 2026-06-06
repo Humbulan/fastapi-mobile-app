@@ -11,7 +11,7 @@ class SovereignHandler(BaseHTTPRequestHandler):
             'service': 'Sovereign_Master',
             'status': 'online',
             'controller': 'Central Command',
-            'active_sectors': [8082, 8085, 8086, 8087, 8088, 8100, 8102, 8110, 8111, 8112, 11434],
+            'active_sectors': [8082, 8085, 8086, 8087, 8088, 8100, 8102, 8110, 8111, 8112, 8117, 8101, 11434],
             'command': 'All systems nominal',
             'timestamp': str(datetime.now())
         }

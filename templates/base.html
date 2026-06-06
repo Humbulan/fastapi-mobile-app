@@ -1,85 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imperial Network - {% block title %}Dashboard{% endblock %}</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
+    <title>Imperial Network 2.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: bold; }
-        .card { margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        body { background-color: #f4f4f4; font-family: sans-serif; }
+        .nav-icons { display: flex; justify-content: space-around; background: white; padding: 10px; border-bottom: 1px solid #ddd; }
+        .nav-icons a { color: #333; text-decoration: none; font-size: 14px; text-align: center; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-network-wired"></i> Imperial Network 2.0
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dashboard">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/create_order">
-                                <i class="fas fa-shopping-cart"></i> New Order
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/create_payment">
-                                <i class="fas fa-credit-card"></i> Pay
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/logout">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/login">
-                                <i class="fas fa-sign-in-alt"></i> Login
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/register">
-                                <i class="fas fa-user-plus"></i> Register
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
+        <span>👑 CEO: Humbulani Mudau</span>
+        <span>IMPERIAL NETWORK</span>
+    </div>
+    <div class="nav-icons">
+        <a href="/dashboard"><i class="fas fa-home d-block"></i> Home</a>
+        <a href="/ai/dashboard"><i class="fas fa-robot d-block"></i> AI Button</a>
+        <a href="/ussd/admin"><i class="fas fa-city d-block"></i> Village</a>
+    </div>
+    <div class="container mt-3">
         {% block content %}{% endblock %}
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

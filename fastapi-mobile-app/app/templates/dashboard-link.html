@@ -1,0 +1,36 @@
+<!-- Dashboard Link (shown only when logged in) -->
+<div id="dashboard-link-container" style="margin: 15px 0;">
+    <div style="text-align: center;">
+        <button onclick="dashboardHandler.accessDashboard()" class="btn" style="background: #28a745; display: none;" id="dashboard-btn">
+            🎯 Go to Dashboard
+        </button>
+        <div id="dashboard-hint" style="font-size: 12px; color: #666; margin-top: 5px;">
+            🔒 Login to access dashboard
+        </div>
+    </div>
+</div>
+
+<script>
+// Update dashboard link based on auth status
+function updateDashboardLink() {
+    const isAuthenticated = dashboardHandler.isAuthenticated();
+    const btn = document.getElementById('dashboard-btn');
+    const hint = document.getElementById('dashboard-hint');
+    
+    if (btn && hint) {
+        if (isAuthenticated) {
+            btn.style.display = 'block';
+            hint.innerHTML = '✅ Click to access your dashboard';
+            hint.style.color = '#28a745';
+        } else {
+            btn.style.display = 'none';
+            hint.innerHTML = '🔒 Login to access dashboard';
+            hint.style.color = '#666';
+        }
+    }
+}
+
+// Initialize on load and when auth changes
+document.addEventListener('DOMContentLoaded', updateDashboardLink);
+window.addEventListener('storage', updateDashboardLink);
+</script>

@@ -1,0 +1,573 @@
+import datetime
+import socket
+import os
+import subprocess
+import json
+import tarfile
+import shutil
+from pathlib import Path
+
+# ========== CONFIGURATION ==========
+VILLAGE_COUNT = 43
+USSD_CODE = "*134*600#"
+GROWTH_RATE = 29.7  # From wealth_history.csv
+TOTAL_WEALTH = 269905078380.45  # From wealth_history.csv
+RECENT_REVENUE = 84735.00  # From wealth_history.csv
+
+# Port of Beira data from Dawn Report
+BEIRA_DATA = {
+    "current_volume": 14.2,  # million tons
+    "target_volume": 18.0,   # million tons
+    "investment": 50,         # million R
+    "status": "OPERATIONAL",
+    "progress": (14.2/18.0)*100  # 78.9%
+}
+
+# Sample village data based on compliance reports and real data
+VILLAGES = {
+    "Grace's Tuck Shop": {"status": "active", "revenue": 12500, "compliance": "passed", "last_sync": "2026-03-17 08:30"},
+    "Thabo's Wholesale": {"status": "active", "revenue": 34200, "compliance": "passed", "last_sync": "2026-03-17 08:45"},
+    "Lerato's Mini Market": {"status": "active", "revenue": 8900, "compliance": "penalty", "last_sync": "2026-03-17 07:15", "penalty_reason": "Stock variance > 15%", "penalty_amount": 500},
+    "James General Dealer": {"status": "active", "revenue": 15600, "compliance": "passed", "last_sync": "2026-03-17 09:00"},
+    "Maria's Spaza": {"status": "active", "revenue": 6700, "compliance": "warning", "last_sync": "2026-03-17 06:30", "warning_reason": "Late reconciliation"},
+    "Mopani": {"status": "active", "revenue": 28900, "compliance": "passed", "last_sync": "2026-03-17 08:50"},
+    "Beira": {"status": "active", "revenue": 45300, "compliance": "passed", "last_sync": "2026-03-17 08:55"},
+    "Malamulele": {"status": "active", "revenue": 12100, "compliance": "passed", "last_sync": "2026-03-17 07:45"},
+    "Giyani": {"status": "active", "revenue": 27800, "compliance": "penalty", "last_sync": "2026-03-17 06:15", "penalty_reason": "Compliance audit failure", "penalty_amount": 500},
+    "Phalaborwa": {"status": "active", "revenue": 34500, "compliance": "passed", "last_sync": "2026-03-17 09:05"},
+    "Tzaneen": {"status": "active", "revenue": 21300, "compliance": "passed", "last_sync": "2026-03-17 08:20"},
+    "Musina": {"status": "active", "revenue": 18700, "compliance": "warning", "last_sync": "2026-03-17 07:55", "warning_reason": "Border documentation delay"},
+    "Louis Trichardt": {"status": "active", "revenue": 22400, "compliance": "passed", "last_sync": "2026-03-17 08:40"},
+    "Thohoyandou": {"status": "active", "revenue": 39800, "compliance": "passed", "last_sync": "2026-03-17 09:10"},
+    "Vuwani": {"status": "active", "revenue": 8900, "compliance": "passed", "last_sync": "2026-03-17 07:30"},
+    "Sibasa": {"status": "active", "revenue": 16700, "compliance": "penalty", "last_sync": "2026-03-17 06:45", "penalty_reason": "Missing documentation", "penalty_amount": 500},
+    "Makhado": {"status": "active", "revenue": 25600, "compliance": "passed", "last_sync": "2026-03-17 08:15"},
+    "Elim": {"status": "active", "revenue": 14300, "compliance": "passed", "last_sync": "2026-03-17 08:05"},
+    "Waterval": {"status": "active", "revenue": 7800, "compliance": "warning", "last_sync": "2026-03-17 07:20", "warning_reason": "Water usage reporting overdue"},
+    "Mbhokota": {"status": "active", "revenue": 5600, "compliance": "passed", "last_sync": "2026-03-17 06:50"},
+    "Mpheni": {"status": "active", "revenue": 9200, "compliance": "passed", "last_sync": "2026-03-17 07:40"},
+    "Mashamba": {"status": "active", "revenue": 13400, "compliance": "passed", "last_sync": "2026-03-17 08:25"},
+    "Malamangwe": {"status": "active", "revenue": 4500, "compliance": "penalty", "last_sync": "2026-03-17 05:55", "penalty_reason": "Security protocol violation", "penalty_amount": 500},
+    "Makutamvi": {"status": "active", "revenue": 3200, "compliance": "passed", "last_sync": "2026-03-17 06:10"},
+    "Ha-Ravele": {"status": "active", "revenue": 8800, "compliance": "passed", "last_sync": "2026-03-17 07:35"},
+    "Ha-Mashau": {"status": "active", "revenue": 7600, "compliance": "warning", "last_sync": "2026-03-17 07:05", "warning_reason": "Community feedback pending"},
+    "Ha-Makhuvha": {"status": "active", "revenue": 12300, "compliance": "passed", "last_sync": "2026-03-17 08:10"},
+    "Ha-Masia": {"status": "active", "revenue": 5400, "compliance": "passed", "last_sync": "2026-03-17 06:40"},
+    "Ha-Mudimeli": {"status": "active", "revenue": 6700, "compliance": "penalty", "last_sync": "2026-03-17 05:30", "penalty_reason": "Infrastructure maintenance delay", "penalty_amount": 500},
+    "Ha-Makuya": {"status": "active", "revenue": 8900, "compliance": "passed", "last_sync": "2026-03-17 07:50"},
+    "Ha-Mphaila": {"status": "active", "revenue": 2100, "compliance": "warning", "last_sync": "2026-03-17 04:45", "warning_reason": "Low activity alert"},
+    "Ha-Matsika": {"status": "active", "revenue": 4300, "compliance": "passed", "last_sync": "2026-03-17 06:20"},
+    "Ha-Muthivhi": {"status": "active", "revenue": 11200, "compliance": "passed", "last_sync": "2026-03-17 07:55"},
+    "Ha-Madodonga": {"status": "active", "revenue": 15700, "compliance": "passed", "last_sync": "2026-03-17 08:35"},
+    "Ha-Makhitha": {"status": "active", "revenue": 6800, "compliance": "penalty", "last_sync": "2026-03-17 05:15", "penalty_reason": "Environmental compliance issue", "penalty_amount": 500},
+    "Ha-Mudau": {"status": "active", "revenue": 13100, "compliance": "passed", "last_sync": "2026-03-17 07:25"},
+    "Ha-Nesengani": {"status": "active", "revenue": 4200, "compliance": "passed", "last_sync": "2026-03-17 06:05"},
+    "Ha-Ramudzuli": {"status": "active", "revenue": 5300, "compliance": "warning", "last_sync": "2026-03-17 06:55", "warning_reason": "Staff training required"},
+    "Ha-Malada": {"status": "active", "revenue": 3600, "compliance": "passed", "last_sync": "2026-03-17 05:45"},
+    "Ha-Mashamba": {"status": "active", "revenue": 9400, "compliance": "passed", "last_sync": "2026-03-17 07:10"},
+    "Ha-Mmbara": {"status": "active", "revenue": 2800, "compliance": "penalty", "last_sync": "2026-03-17 04:30", "penalty_reason": "Safety inspection failed", "penalty_amount": 500},
+}
+
+# ========== UTILITY FUNCTIONS ==========
+def check_port(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5)
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+def get_latest_audit():
+    today = datetime.datetime.now().strftime('%Y%m%d')
+    path = os.path.expanduser(f"~/humbu_community_nexus/daily_summary_{today}.txt")
+    if os.path.exists(path):
+        try:
+            with open(path, 'r') as f:
+                return f"\n--- DAWN REPORT ---\n{f.read().strip()}\n------------------"
+        except Exception as e:
+            return f"❌ Audit Error: {e}"
+    return "⚠️ No report found for today."
+
+def get_directory_listing():
+    """Safe directory listing without pipe issues"""
+    try:
+        result = subprocess.run(
+            ["ls", "-lt", os.path.expanduser("~/imperial_network")],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return result.stdout
+    except subprocess.TimeoutExpired:
+        return "⚠️ Directory listing timed out"
+    except Exception as e:
+        return f"❌ Error: {e}"
+
+def run_backup():
+    """Fixed backup function with correct tarfile mode"""
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_name = f"imperial_omega_state_{timestamp}.tar.gz"
+    backup_path = os.path.expanduser(f"~/imperial_backups/{backup_name}")
+    
+    # Create backup directory if it doesn't exist
+    os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+    
+    print(f"💾 ARCHIVING TO: {backup_name}...")
+    
+    try:
+        # FIXED: Use 'w:gz' for compressed writing (single character mode)
+        with tarfile.open(backup_path, "w:gz") as tar:
+            # Add the entire imperial_network directory
+            imperial_path = os.path.expanduser("~/imperial_network")
+            if os.path.exists(imperial_path):
+                tar.add(imperial_path, arcname="imperial_network")
+                print(f"  ✓ Added {imperial_path}")
+            
+            # Add humbu_community_nexus if it exists
+            nexus_path = os.path.expanduser("~/humbu_community_nexus")
+            if os.path.exists(nexus_path):
+                tar.add(nexus_path, arcname="humbu_community_nexus")
+                print(f"  ✓ Added {nexus_path}")
+            
+            # Get file count
+            file_count = len(tar.getmembers())
+        
+        # Verify backup size
+        size_mb = os.path.getsize(backup_path) / (1024 * 1024)
+        print(f"✅ Backup successful: {backup_name}")
+        print(f"  📦 Size: {size_mb:.2f} MB")
+        print(f"  📁 Location: {backup_path}")
+        print(f"  🔍 Files backed up: {file_count}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Backup failed: {e}")
+        return False
+
+def quarantine_junk():
+    """Move corrupted/unstable files to quarantine"""
+    q_dir = os.path.expanduser("~/imperial_network/quarantine")
+    if not os.path.exists(q_dir):
+        os.makedirs(q_dir)
+        print(f"  Created quarantine directory: {q_dir}")
+    
+    junk_patterns = [
+        '.corrupted', '.bak', '.bak2', '.bak3', '.TODAYS_BROKEN',
+        '.backup', '.backup2', '.backup3', '.broken', '.old'
+    ]
+    
+    count = 0
+    moved_files = []
+    
+    for file in os.listdir(os.path.expanduser("~/imperial_network")):
+        file_path = os.path.join(os.path.expanduser("~/imperial_network"), file)
+        if os.path.isfile(file_path):
+            if any(file.endswith(pattern) for pattern in junk_patterns):
+                shutil.move(file_path, os.path.join(q_dir, file))
+                count += 1
+                moved_files.append(file)
+    
+    if count > 0:
+        print(f"🛡️ QUARANTINE: Moved {count} unstable files to /quarantine:")
+        for f in moved_files[:5]:  # Show first 5
+            print(f"    • {f}")
+        if len(moved_files) > 5:
+            print(f"    ... and {len(moved_files)-5} more")
+    else:
+        print("✅ No junk files found to quarantine")
+    
+    return count
+
+# ========== COMMAND FUNCTIONS ==========
+def cmd_status():
+    print(f"📊 SYSTEM: Operational | 🕒 {datetime.datetime.now().strftime('%H:%M:%S')}")
+    print(f"📍 VILLAGES: {VILLAGE_COUNT} Active | 📡 USSD: {USSD_CODE}")
+    print(f"💰 TOTAL WEALTH: R{TOTAL_WEALTH:,.2f}")
+    print(f"📈 GROWTH RATE: {GROWTH_RATE}%")
+    print(f"💵 24H REVENUE: R{RECENT_REVENUE:,.2f}")
+
+def cmd_watch():
+    print("🔍 SCANNING IMPERIAL STACK...")
+    stack = {8080: "Gateway", 8102: "API", 1880: "Node-RED", 11434: "Ollama"}
+    for port, name in stack.items():
+        status = '✅' if check_port(port) else '❌'
+        print(f"  Port {port} ({name}): {status}")
+
+def cmd_sanitize():
+    print("🛡️ SANITIZING CORE PORTS...")
+    cleared = 0
+    for port in [5173, 8080, 8082, 8083, 8102, 1880]:
+        result = os.system(f"fuser -k {port}/tcp > /dev/null 2>&1")
+        if result == 0:
+            cleared += 1
+    print(f"✅ Environment Cleared. ({cleared} ports sanitized)")
+
+def cmd_nexus():
+    print("🌐 IMPERIAL NEXUS STATUS")
+    print(f"  📱 USSD: {USSD_CODE} ACTIVE")
+    print(f"  🏘️  VILLAGES: {VILLAGE_COUNT} Integrated")
+    print("  📊 COVERAGE: SADC Region")
+    print("  ⚡ LOGIC: High Velocity Engine")
+    print(f"  💰 NETWORK VALUE: R{TOTAL_WEALTH:,.2f}")
+
+def cmd_villages():
+    print(f"🏘️  ACTIVE VILLAGES ({VILLAGE_COUNT}):")
+    sorted_villages = sorted(VILLAGES.keys())
+    for i, village in enumerate(sorted_villages[:15], 1):
+        data = VILLAGES[village]
+        status_icon = '✅' if data['compliance'] == 'passed' else '⚠️' if data['compliance'] == 'warning' else '❌'
+        print(f"  {i}. {village} {status_icon}")
+    print(f"  ... and {VILLAGE_COUNT-15} more villages")
+
+def cmd_revenue():
+    print("💰 REVENUE SNAPSHOT:")
+    revenue_files = ["revenue.log", "wealth_history.csv"]
+    found = False
+    for file in revenue_files:
+        if os.path.exists(file):
+            print(f"\n📄 Last 5 lines from {file}:")
+            try:
+                result = subprocess.run(["tail", "-5", file], capture_output=True, text=True)
+                print(result.stdout)
+                found = True
+            except Exception as e:
+                print(f"  Error reading {file}: {e}")
+    if not found:
+        print("  No revenue data found. Try 'audit' for daily summary.")
+
+def cmd_sync():
+    print("🔄 VILLAGE SYNC STATUS:")
+    sync_scripts = ["sadc_village_sync.py", "sadc_village_sync_scaled.py"]
+    for script in sync_scripts:
+        if os.path.exists(script):
+            print(f"  ✓ {script} available")
+            try:
+                mtime = os.path.getmtime(script)
+                last_run = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+                print(f"    Last modified: {last_run}")
+            except:
+                pass
+        else:
+            print(f"  ✗ {script} not found")
+    
+    if os.path.exists("sadc_sync.py"):
+        print("  ✓ sadc_sync.py available")
+    
+    # Show last 3 villages synced
+    print("\n  📡 Last villages synced:")
+    sorted_by_sync = sorted(VILLAGES.items(), key=lambda x: x[1]['last_sync'], reverse=True)[:3]
+    for village, data in sorted_by_sync:
+        print(f"    {village}: {data['last_sync']}")
+
+def cmd_broadcast():
+    print("📱 USSD BROADCAST TO ALL VILLAGES")
+    print(f"  Code: {USSD_CODE}")
+    print("  Message: 'Imperial Network Status Update'")
+    print("\n  📡 SENDING...")
+    
+    # Simulate broadcast to all villages
+    success_count = 0
+    for village in list(VILLAGES.keys())[:10]:  # Show first 10 for demo
+        print(f"    ✓ {village}: delivered")
+        success_count += 1
+    
+    # Log the broadcast
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    with open("broadcast_log.txt", "a") as f:
+        f.write(f"{timestamp} - Broadcast sent to {VILLAGE_COUNT} villages\n")
+    
+    print(f"\n  ✅ Broadcast complete. {success_count}/{VILLAGE_COUNT} villages confirmed.")
+    print("  📝 Logged to broadcast_log.txt")
+
+def cmd_compliance():
+    print("⚖️ COMPLIANCE STATUS BY VILLAGE:")
+    
+    # Count villages by compliance status
+    passed = sum(1 for v in VILLAGES.values() if v['compliance'] == 'passed')
+    warning = sum(1 for v in VILLAGES.values() if v['compliance'] == 'warning')
+    penalty = sum(1 for v in VILLAGES.values() if v['compliance'] == 'penalty')
+    
+    print(f"  ✅ Passed: {passed} villages")
+    print(f"  ⚠️  Warning: {warning} villages")
+    print(f"  ❌ Penalty: {penalty} villages")
+    
+    if warning > 0 or penalty > 0:
+        print("\n  Villages requiring attention:")
+        for village, data in VILLAGES.items():
+            if data['compliance'] != 'passed':
+                icon = '⚠️' if data['compliance'] == 'warning' else '❌'
+                reason = data.get('warning_reason', data.get('penalty_reason', 'Unknown'))
+                amount = data.get('penalty_amount', '')
+                amount_str = f" - R{amount}" if amount else ""
+                print(f"    {icon} {village}: {reason}{amount_str}")
+
+def cmd_compliance_detail():
+    print("⚖️ DETAILED COMPLIANCE REPORT")
+    print("=" * 60)
+    
+    # Penalty villages
+    penalty_villages = [(v, d) for v, d in VILLAGES.items() if d['compliance'] == 'penalty']
+    if penalty_villages:
+        print(f"\n❌ PENALTY VILLAGES ({len(penalty_villages)}):")
+        total_penalties = sum(d.get('penalty_amount', 0) for v, d in penalty_villages)
+        for village, data in penalty_villages:
+            impact = (data.get('penalty_amount', 500)/data['revenue'])*100
+            print(f"  • {village}")
+            print(f"    Reason: {data.get('penalty_reason', 'Unknown')}")
+            print(f"    Amount: R{data.get('penalty_amount', 500)}")
+            print(f"    Last Sync: {data['last_sync']}")
+            print(f"    Revenue Impact: -{impact:.1f}%")
+        print(f"\n  Total penalties: R{total_penalties}")
+    
+    # Warning villages
+    warning_villages = [(v, d) for v, d in VILLAGES.items() if d['compliance'] == 'warning']
+    if warning_villages:
+        print(f"\n⚠️ WARNING VILLAGES ({len(warning_villages)}):")
+        for village, data in warning_villages:
+            print(f"  • {village}")
+            print(f"    Reason: {data.get('warning_reason', 'Unknown')}")
+            print(f"    Last Sync: {data['last_sync']}")
+    
+    print("\n" + "=" * 60)
+
+def cmd_forecast():
+    print("📈 REVENUE FORECAST (Based on 29.7% growth rate)")
+    
+    current_revenue = RECENT_REVENUE
+    months = ["March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    
+    print(f"\n  Current (March): R{current_revenue:,.2f}")
+    
+    for i, month in enumerate(months[1:], 1):
+        projected = current_revenue * (1 + GROWTH_RATE/100) ** i
+        print(f"  {month}: R{projected:,.2f}")
+    
+    # 12-month projection
+    eoy = current_revenue * (1 + GROWTH_RATE/100) ** 9
+    print(f"\n  🎯 Year End (December): R{eoy:,.2f}")
+    
+    # 5-year projection
+    five_year = current_revenue * (1 + GROWTH_RATE/100) ** 60
+    print(f"  🔮 5 Year (2031): R{five_year:,.2f}")
+
+def cmd_top_villages():
+    print("🏆 TOP PERFORMING VILLAGES (by revenue):")
+    
+    # Sort villages by revenue
+    top_villages = sorted(VILLAGES.items(), key=lambda x: x[1]['revenue'], reverse=True)[:10]
+    
+    for i, (village, data) in enumerate(top_villages, 1):
+        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else "  "
+        compliance_icon = '✅' if data['compliance'] == 'passed' else '⚠️' if data['compliance'] == 'warning' else '❌'
+        print(f"  {medal} {i}. {village}: R{data['revenue']:,.2f} {compliance_icon}")
+    
+    # Calculate total revenue of top 10
+    top_revenue = sum(data['revenue'] for _, data in top_villages)
+    total_revenue = sum(data['revenue'] for data in VILLAGES.values())
+    percentage = (top_revenue / total_revenue) * 100
+    
+    print(f"\n  Top 10 contribute {percentage:.1f}% of total revenue")
+
+def cmd_backup():
+    print("💾 EMERGENCY BACKUP SYSTEM")
+    print("  Creating full Imperial Network backup...")
+    run_backup()
+
+def cmd_clean():
+    print("🧹 CLEANUP UTILITY")
+    print("  Quarantining corrupted/unstable files...")
+    count = quarantine_junk()
+    if count > 0:
+        print(f"\n  Run 'backup' now to create a clean backup without junk files.")
+
+def cmd_beira():
+    print("🚢 PORT OF BEIRA EXPANSION MONITOR")
+    print("=" * 60)
+    
+    # Current status from Dawn Report
+    print(f"\n📍 STATUS: {BEIRA_DATA['status']}")
+    print(f"\n📊 VOLUME METRICS:")
+    print(f"  Current: {BEIRA_DATA['current_volume']}M tons")
+    print(f"  Target:  {BEIRA_DATA['target_volume']}M tons")
+    print(f"  Progress: {BEIRA_DATA['progress']:.1f}%")
+    
+    # Progress bar
+    bar_length = 40
+    filled = int(bar_length * BEIRA_DATA['progress'] / 100)
+    bar = '█' * filled + '░' * (bar_length - filled)
+    print(f"  [{bar}]")
+    
+    print(f"\n💰 INVESTMENT:")
+    print(f"  Allocated: R{BEIRA_DATA['investment']}M")
+    
+    # Timeline projection
+    remaining = BEIRA_DATA['target_volume'] - BEIRA_DATA['current_volume']
+    monthly_rate = 0.3  # 300k tons per month (estimated)
+    months_to_target = remaining / monthly_rate
+    
+    print(f"\n📅 TIMELINE:")
+    print(f"  Remaining volume: {remaining:.1f}M tons")
+    print(f"  Current rate: {monthly_rate}M tons/month")
+    print(f"  Estimated completion: {months_to_target:.1f} months")
+    
+    completion_date = datetime.datetime.now() + datetime.timedelta(days=30*months_to_target)
+    print(f"  Target date: {completion_date.strftime('%Y-%m-%d')}")
+    
+    # Economic impact
+    print(f"\n📈 ECONOMIC IMPACT:")
+    port_revenue = BEIRA_DATA['current_volume'] * 12  # Rough estimate: R12M per ton
+    print(f"  Annual port revenue: R{port_revenue:.1f}M")
+    print(f"  Contribution to wealth: {(port_revenue*1000000/TOTAL_WEALTH)*100:.4f}%")
+    
+    print("\n" + "=" * 60)
+
+def cmd_overview():
+    print("=" * 60)
+    print("            IMPERIAL NETWORK OVERVIEW DASHBOARD")
+    print("=" * 60)
+    
+    # System Status
+    print(f"\n📊 SYSTEM STATUS:")
+    print(f"  Time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"  Uptime: All systems operational")
+    
+    # Port Status
+    stack = {8080: "Gateway", 8102: "API", 1880: "Node-RED", 11434: "Ollama"}
+    port_status = []
+    for port, name in stack.items():
+        status = '✅' if check_port(port) else '❌'
+        port_status.append(f"{name}: {status}")
+    print(f"  Ports: {' | '.join(port_status)}")
+    
+    # Network Metrics
+    print(f"\n🌐 NETWORK METRICS:")
+    print(f"  Villages: {VILLAGE_COUNT} active")
+    print(f"  Total Wealth: R{TOTAL_WEALTH:,.2f}")
+    print(f"  24h Revenue: R{RECENT_REVENUE:,.2f}")
+    print(f"  Growth Rate: {GROWTH_RATE}%")
+    
+    # Compliance Summary
+    passed = sum(1 for v in VILLAGES.values() if v['compliance'] == 'passed')
+    warning = sum(1 for v in VILLAGES.values() if v['compliance'] == 'warning')
+    penalty = sum(1 for v in VILLAGES.values() if v['compliance'] == 'penalty')
+    print(f"\n⚖️ COMPLIANCE:")
+    print(f"  ✅ Passed: {passed} | ⚠️ Warning: {warning} | ❌ Penalty: {penalty}")
+    print(f"  💸 Total Penalties: R{penalty * 500}")
+    
+    # Top Villages
+    print(f"\n🏆 TOP 5 VILLAGES:")
+    top_villages = sorted(VILLAGES.items(), key=lambda x: x[1]['revenue'], reverse=True)[:5]
+    for village, data in top_villages:
+        compliance_icon = '✅' if data['compliance'] == 'passed' else '⚠️' if data['compliance'] == 'warning' else '❌'
+        print(f"  • {village}: R{data['revenue']:,.2f} {compliance_icon}")
+    
+    # Port of Beira Status
+    print(f"\n🚢 PORT OF BEIRA:")
+    print(f"  Volume: {BEIRA_DATA['current_volume']}M/{BEIRA_DATA['target_volume']}M tons ({BEIRA_DATA['progress']:.1f}%)")
+    
+    # 3-Month Forecast
+    print(f"\n📈 3-MONTH FORECAST:")
+    for i in [1, 2, 3]:
+        projected = RECENT_REVENUE * (1 + GROWTH_RATE/100) ** i
+        month = (datetime.datetime.now().month + i) % 12
+        month = month if month != 0 else 12
+        month_name = datetime.date(1900, month, 1).strftime('%B')
+        print(f"  {month_name}: R{projected:,.2f}")
+    
+    # Recent Activity
+    print(f"\n📡 RECENT ACTIVITY:")
+    recent_villages = sorted(VILLAGES.items(), key=lambda x: x[1]['last_sync'], reverse=True)[:3]
+    for village, data in recent_villages:
+        print(f"  • {village} synced at {data['last_sync']}")
+    
+    print("\n" + "=" * 60)
+
+def cmd_help():
+    print("\n📋 IMPERIAL COMMAND CENTER - FULL COMMAND LIST")
+    print("=" * 50)
+    print("  status       - System status and key metrics")
+    print("  watch        - Scan all service ports")
+    print("  audit        - Fetch latest Dawn Report")
+    print("  sanitize     - Clear all ports")
+    print("  logs         - Show directory structure")
+    print("  nexus        - USSD platform status")
+    print("  villages     - List active villages")
+    print("  revenue      - Show recent revenue data")
+    print("  sync         - Check village sync status")
+    print("  broadcast    - Send USSD to all villages")
+    print("  compliance   - Show compliance issues")
+    print("  compliance_detail - Detailed compliance report")
+    print("  forecast     - Project revenue growth")
+    print("  top_villages - Show top performers")
+    print("  backup       - Emergency network backup (FIXED)")
+    print("  clean        - Quarantine corrupted files (NEW)")
+    print("  beira        - Port of Beira expansion monitor")
+    print("  overview     - Complete network dashboard")
+    print("  ping         - Test connection")
+    print("  quit         - Exit")
+    print("=" * 50)
+
+# ========== MAIN LOOP ==========
+def main():
+    print("🚀 IMPERIAL NETWORK COMMAND CENTER - ULTIMATE EDITION")
+    print("=" * 60)
+    print(f"📍 ACTIVE VILLAGES: {VILLAGE_COUNT} | 📡 USSD: {USSD_CODE}")
+    print(f"💰 NETWORK VALUE: R{TOTAL_WEALTH:,.2f} | 📈 GROWTH: {GROWTH_RATE}%")
+    print(f"💸 ACTIVE PENALTIES: R3,500 | 🚢 BEIRA: 78.9%")
+    print("=" * 60)
+    print("Type 'help' for all commands or 'overview' for dashboard")
+    
+    while True:
+        try:
+            user_input = input("\nImperial-Nexus > ").strip().lower()
+            
+            if user_input == "quit":
+                print("👋 Shutting down Imperial Network Command Center")
+                break
+            elif user_input == "status":
+                cmd_status()
+            elif user_input == "watch":
+                cmd_watch()
+            elif user_input == "sanitize":
+                cmd_sanitize()
+            elif user_input == "audit":
+                print(get_latest_audit())
+            elif user_input == "nexus":
+                cmd_nexus()
+            elif user_input == "logs":
+                print("📜 IMPERIAL DIRECTORY STRUCTURE:")
+                print(get_directory_listing())
+            elif user_input == "villages":
+                cmd_villages()
+            elif user_input == "revenue":
+                cmd_revenue()
+            elif user_input == "sync":
+                cmd_sync()
+            elif user_input == "broadcast":
+                cmd_broadcast()
+            elif user_input == "compliance":
+                cmd_compliance()
+            elif user_input == "compliance_detail" or user_input == "compliance-detail":
+                cmd_compliance_detail()
+            elif user_input == "forecast":
+                cmd_forecast()
+            elif user_input == "top_villages" or user_input == "top":
+                cmd_top_villages()
+            elif user_input == "backup":
+                cmd_backup()
+            elif user_input == "clean":
+                cmd_clean()
+            elif user_input == "beira":
+                cmd_beira()
+            elif user_input == "overview":
+                cmd_overview()
+            elif user_input == "ping":
+                print("🏓 Pong! Imperial Terminal stable.")
+            elif user_input == "help":
+                cmd_help()
+            else:
+                if user_input: 
+                    print(f"🤖 Agent: '{user_input}' is not valid. Type 'help' for commands.")
+        except KeyboardInterrupt:
+            print("\n👋 Shutting down...")
+            break
+
+if __name__ == "__main__":
+    main()

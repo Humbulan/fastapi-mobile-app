@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Mobile App - Premium Calculator</title>
+    <meta name="description" content="Advanced calculator and text tools with premium features">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .btn {
+            display: block;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn-premium {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+        .btn-premium:hover {
+            background: linear-gradient(135deg, #ee5a24, #ff6b6b);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .online {
+            background: #d4edda;
+            color: #155724;
+        }
+        .offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        #auth-status {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Interceptor - MUST BE FIRST -->
+    <script src="/static/js/auth-interceptor.js"></script>
+
+    <div class="container">
+        <h1>FastAPI Mobile App</h1>
+        <p>Premium Calculator & Text Tools</p>
+        
+        <!-- Auth Status -->
+        <div id="auth-status">
+            <a href="#" onclick="showLogin()">Login</a> | 
+            <a href="#" onclick="showRegister()">Register</a>
+        </div>
+        
+        <div id="status" class="status online">✅ Online & Ready</div>
+        
+        <!-- Working Navigation Links -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🔢 Calculator</h3>
+                <p>Basic and advanced calculations</p>
+                <button onclick="showCalculator()" class="btn">Open Calculator</button>
+            </div>
+            
+            <div class="feature-card">
+                <h3>📝 Text Tools</h3>
+                <p>Text manipulation utilities</p>
+                <button onclick="showTextTools()" class="btn">Open Text Tools</button>
+            </div>
+            
+            <div class="feature-card">
+                <h3>⭐ Premium</h3>
+                <p>Exclusive features</p>
+                <button onclick="showPremium()" class="btn btn-premium">Premium Features</button>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🔐 Auth Test</h3>
+                <p>Test authentication</p>
+                <a href="/test-auth" class="btn">Test Authentication</a>
+            </div>
+        </div>
+
+        <!-- Calculator Section (Hidden by default) -->
+        <div id="calculator-section" style="display: none; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h3>🔢 Calculator</h3>
+            <input type="text" id="calcInput" placeholder="Enter expression (e.g., 2+2)" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <button onclick="calculatePremium()" class="btn">Calculate</button>
+            <div id="calcResult" style="margin-top: 10px; padding: 10px; display: none;"></div>
+            <button onclick="hideCalculator()" class="btn" style="background: #6c757d; margin-top: 10px;">Close</button>
+        </div>
+
+        <!-- Text Tools Section (Hidden by default) -->
+        <div id="text-tools-section" style="display: none; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h3>📝 Text Tools</h3>
+            <input type="text" id="textInput" placeholder="Enter text" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <button onclick="reverseText()" class="btn">Reverse Text</button>
+            <button onclick="uppercaseText()" class="btn">UPPERCASE</button>
+            <button onclick="lowercaseText()" class="btn">lowercase</button>
+            <div id="textResult" style="margin-top: 10px; padding: 10px; display: none;"></div>
+            <button onclick="hideTextTools()" class="btn" style="background: #6c757d; margin-top: 10px;">Close</button>
+        </div>
+
+        <!-- Premium Features Section (Hidden by default) -->
+        <div id="premium-section" style="display: none; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h3>⭐ Premium Features</h3>
+            <p>Currency Converter (Premium Feature)</p>
+            <input type="number" id="currencyAmount" placeholder="Amount" style="width: 100%; padding: 10px; margin: 5px 0;">
+            <select id="fromCurrency" style="width: 100%; padding: 10px; margin: 5px 0;">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+            </select>
+            <select id="toCurrency" style="width: 100%; padding: 10px; margin: 5px 0;">
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+            </select>
+            <button onclick="testCurrency()" class="btn btn-premium">Convert Currency</button>
+            <div id="currencyResult" style="margin-top: 10px; padding: 10px; display: none;"></div>
+            <button onclick="hidePremium()" class="btn" style="background: #6c757d; margin-top: 10px;">Close</button>
+        </div>
+        
+        <!-- Feature suggestion form -->
+        <div style="margin-top: 30px;">
+            <h3>Suggest a Feature</h3>
+            <input type="text" id="featureInput" placeholder="What feature would you like to see?" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <button onclick="suggestFeature()" class="btn">Submit Suggestion</button>
+        </div>
+    </div>
+
+    <!-- ORIGINAL INLINE JAVASCRIPT -->
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        }
+
+        // Authentication Functions (ORIGINAL - WILL BE PATCHED)
+        async function showLogin() {
+            const username = prompt('Enter username:');
+            const password = prompt('Enter password:');
+            if (username && password) {
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        currentUser = data.username;
+                        currentToken = data.access_token;
+                        updateAuthUI();
+                        alert('✅ Login successful! Welcome ' + data.username);
+                    } else {
+                        alert('❌ Login failed: ' + (data.detail || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    alert('❌ Login failed: ' + error.message);
+                }
+            }
+        }
+
+        async function showRegister() {
+            const username = prompt('Enter username:');
+            const email = prompt('Enter email:');
+            const fullName = prompt('Enter full name:');
+            const password = prompt('Enter password:');
+            if (username && email && fullName && password) {
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            email: email,
+                            password: password,
+                            full_name: fullName
+                        })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert('✅ Registration successful! Welcome ' + data.username);
+                    } else {
+                        alert('❌ Registration failed: ' + (data.detail || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    alert('❌ Registration failed: ' + error.message);
+                }
+            }
+        }
+
+        // Global variables
+        let currentUser = null;
+        let currentToken = null;
+
+        function updateAuthUI() {
+            const authDiv = document.getElementById('auth-status');
+            if (authDiv) {
+                if (currentUser) {
+                    authDiv.innerHTML = `✅ Logged in as ${currentUser} | <a href="#" onclick="logout()">Logout</a>`;
+                } else {
+                    authDiv.innerHTML = `<a href="#" onclick="showLogin()">Login</a> | <a href="#" onclick="showRegister()">Register</a>`;
+                }
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            currentToken = null;
+            updateAuthUI();
+            alert('✅ Logged out successfully');
+        }
+
+        // Section Navigation Functions
+        function showCalculator() {
+            hideAllSections();
+            document.getElementById('calculator-section').style.display = 'block';
+        }
+
+        function showTextTools() {
+            hideAllSections();
+            document.getElementById('text-tools-section').style.display = 'block';
+        }
+
+        function showPremium() {
+            hideAllSections();
+            document.getElementById('premium-section').style.display = 'block';
+        }
+
+        function hideCalculator() {
+            document.getElementById('calculator-section').style.display = 'none';
+        }
+
+        function hideTextTools() {
+            document.getElementById('text-tools-section').style.display = 'none';
+        }
+
+        function hidePremium() {
+            document.getElementById('premium-section').style.display = 'none';
+        }
+
+        function hideAllSections() {
+            document.getElementById('calculator-section').style.display = 'none';
+            document.getElementById('text-tools-section').style.display = 'none';
+            document.getElementById('premium-section').style.display = 'none';
+        }
+
+        // Text Tools Functions
+        function reverseText() {
+            const text = document.getElementById('textInput').value;
+            const resultDiv = document.getElementById('textResult');
+            resultDiv.innerHTML = `Reversed: ${text.split('').reverse().join('')}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function uppercaseText() {
+            const text = document.getElementById('textInput').value;
+            const resultDiv = document.getElementById('textResult');
+            resultDiv.innerHTML = `Uppercase: ${text.toUpperCase()}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function lowercaseText() {
+            const text = document.getElementById('textInput').value;
+            const resultDiv = document.getElementById('textResult');
+            resultDiv.innerHTML = `Lowercase: ${text.toLowerCase()}`;
+            resultDiv.style.display = 'block';
+        }
+
+        // Premium Features
+        async function calculatePremium() {
+            const expression = document.getElementById('calcInput').value;
+            const resultDiv = document.getElementById('calcResult');
+            
+            if (!currentToken) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '❌ Please login to access premium features';
+                return;
+            }
+
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Calculating...';
+
+                const response = await fetch(`/api/advanced-calculator/${encodeURIComponent(expression)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Calculation failed');
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `✅ Result: ${data.result}`;
+            } catch (error) {
+                resultDiv.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        async function testCurrency() {
+            const amount = document.getElementById('currencyAmount').value;
+            const from = document.getElementById('fromCurrency').value;
+            const to = document.getElementById('toCurrency').value;
+            const resultDiv = document.getElementById('currencyResult');
+            
+            if (!currentToken) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '❌ Please login to access premium features';
+                return;
+            }
+
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Converting...';
+
+                const response = await fetch(`/api/currency-convert/${amount}/${from}/${to}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Currency conversion failed');
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `✅ ${amount} ${from} = ${data.converted_amount} ${to}`;
+            } catch (error) {
+                resultDiv.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        function suggestFeature() {
+            const feature = document.getElementById('featureInput').value;
+            if (feature) {
+                alert('Great suggestion! We\'ll consider adding: ' + feature);
+            }
+        }
+
+        // Online/Offline Detection
+        window.addEventListener('online', () => {
+            document.getElementById('status').className = 'status online';
+            document.getElementById('status').textContent = '✅ Online & Ready';
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('status').className = 'status offline';
+            document.getElementById('status').textContent = '⚠️ Offline - Limited Functionality';
+        });
+
+        // Initialize auth UI
+        updateAuthUI();
+    </script>
+
+    <!-- AUTH PATCH - FIXES THE PROBLEMATIC FUNCTIONS -->
+    <script src="/static/js/auth-guard.js"></script>
+    <script src="/static/js/auth-patch.js"></script>
+
+    <!-- Other JavaScript files -->
+    <script src="/static/js/premium-features.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

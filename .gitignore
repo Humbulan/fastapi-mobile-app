@@ -62,3 +62,8 @@ nohup.out
 dawn_report_clean.txt
 dawn_report.html
 instance/imperial.db
+tmp_clawd/
+*.log
+*.gz
+~/
+node_modules/

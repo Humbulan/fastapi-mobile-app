@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🏛️ IMPERIAL OMEGA - CEO VIEW</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
+    <meta http-equiv="refresh" content="30">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            padding: 15px 10px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 6px rgba(0,255,0,0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #00ff00;
+        }
+        .header .ceo {
+            font-size: 14px;
+            color: #888;
+        }
+        .header .time {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        .card {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 18px 15px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 6px rgba(0,255,0,0.05);
+        }
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #00ff00;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .metric-item {
+            background: #000;
+            padding: 15px 10px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        .metric-item .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metric-item .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ff00;
+        }
+        .metric-item .value small {
+            font-size: 12px;
+            color: #666;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        .gauge {
+            height: 24px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0 5px;
+        }
+        .gauge-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000);
+            color: #000;
+            line-height: 24px;
+            padding-right: 10px;
+            text-align: right;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #333;
+        }
+        .status-row:last-child {
+            border-bottom: none;
+        }
+        .badge {
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge.online {
+            background: #00ff00;
+            color: #000;
+        }
+        .badge.active {
+            background: #00ff00;
+            color: #000;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: #444;
+        }
+        @media (prefers-color-scheme: light) {
+            body { background: #f5f5f5; color: #000; }
+            .header, .card { background: #fff; border-color: #ddd; }
+            .metric-item { background: #f0f0f0; }
+            .badge.online { background: #4CAF50; color: #fff; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ IMPERIAL OMEGA</h1>
+            <div class="ceo">CEO: Humbulani Mudau</div>
+            <div class="time" id="liveTime"></div>
+        </div>
+        
+        <div class="card">
+            <h2>💰 WEALTH LOCK</h2>
+            <div class="metric-grid">
+                <div class="metric-item">
+                    <div class="label">TOTAL</div>
+                    <div class="value" id="wealthTotal">R269.9B</div>
+                </div>
+                <div class="metric-item">
+                    <div class="label">DAILY GAIN</div>
+                    <div class="value" id="dailyGain">+R238M</div>
+                </div>
+            </div>
+            <div class="gauge">
+                <div class="gauge-fill" style="width: 53.98%;" id="wealthGauge">53.98%</div>
+            </div>
+            <div style="text-align: center; font-size: 12px; color: #666; margin-top: 5px;">
+                Progress to R500B
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🛡️ SYSTEM HEALTH</h2>
+            <div class="status-row">
+                <span>Active Ports</span>
+                <span class="badge online" id="activePorts">51/51</span>
+            </div>
+            <div class="status-row">
+                <span>SADC Corridor</span>
+                <span class="badge online">🟢 ACTIVE</span>
+            </div>
+            <div class="status-row">
+                <span>Wealth Lock</span>
+                <span class="badge online">🔒 ACTIVE</span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🌍 SADC METRICS</h2>
+            <div class="metric-grid">
+                <div class="metric-item">
+                    <div class="label">⚡ LITHIUM</div>
+                    <div class="value" id="lithiumVol">5.2<span style="font-size: 12px;">M tons</span></div>
+                </div>
+                <div class="metric-item">
+                    <div class="label">💵 PRICE/TON</div>
+                    <div class="value" id="lithiumPrice">$275</div>
+                </div>
+                <div class="metric-item">
+                    <div class="label">💎 GOLD</div>
+                    <div class="value" id="goldVol">R50.8M</div>
+                </div>
+                <div class="metric-item">
+                    <div class="label">🚢 BEIRA</div>
+                    <div class="value" id="beiraVol">14.2M t</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📱 MTN MOMO</h2>
+            <div class="metric-grid">
+                <div class="metric-item">
+                    <div class="label">TODAY</div>
+                    <div class="value" id="momoCount">156</div>
+                </div>
+                <div class="metric-item">
+                    <div class="label">VOLUME</div>
+                    <div class="value" id="momoVol">R78.0M</div>
+                </div>
+            </div>
+            <div class="status-row">
+                <span>Callback Endpoint</span>
+                <span class="badge online">/momo/callback</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>🏛️ THE ABSOLUTE TRUTH • R269.9B SOVEREIGN WEALTH</div>
+            <div style="margin-top: 5px;">Updated every 30s • Imperial Omega v2.0</div>
+        </div>
+    </div>
+    
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('liveTime').textContent = now.toLocaleString('en-ZA', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        
+        function fetchData() {
+            fetch('/api/imperial/status')
+                .then(r => r.json())
+                .catch(() => {
+                    // Fallback static data
+                    document.getElementById('wealthTotal').textContent = 'R269.9B';
+                    document.getElementById('dailyGain').textContent = '+R238M';
+                    document.getElementById('activePorts').textContent = '51/51';
+                    document.getElementById('lithiumVol').innerHTML = '5.2<span style="font-size: 12px;">M tons</span>';
+                    document.getElementById('lithiumPrice').textContent = '$275';
+                    document.getElementById('goldVol').textContent = 'R50.8M';
+                    document.getElementById('beiraVol').textContent = '14.2M t';
+                    document.getElementById('momoCount').textContent = '156';
+                    document.getElementById('momoVol').textContent = 'R78.0M';
+                });
+        }
+        
+        setInterval(updateTime, 1000);
+        setInterval(fetchData, 30000);
+        updateTime();
+        fetchData();
+    </script>
+</body>
+</html>

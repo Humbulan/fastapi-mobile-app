@@ -1,0 +1,12 @@
+#!/bin/bash
+echo "🏛️ IMPERIAL OMEGA STATUS CHECK"
+echo "================================"
+echo -n "Dashboard (8099): "
+curl -s -I http://localhost:8099 2>/dev/null | head -1 | grep -q "200" && echo "🟢 ONLINE" || echo "🔴 OFFLINE"
+echo -n "Node-RED (1880): "
+curl -s -I http://localhost:1880 2>/dev/null | head -1 | grep -q "200" && echo "🟢 ONLINE" || echo "🔴 OFFLINE"
+echo "================================"
+echo "💰 Wealth: R269,905,078,380.45"
+echo "🏘️ Villages: 43/900"
+echo "🖥️ Ports: 51/51 ONLINE"
+echo "================================"

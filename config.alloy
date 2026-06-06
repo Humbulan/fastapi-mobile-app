@@ -1,0 +1,39 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+livedebugging {
+  enabled = true
+}
+
+clustering {
+  enabled = true
+}
+
+prometheus.remote_write "imperial_bridge" {
+  endpoint {
+    url = "https://api.humbu.store/api/v1/write"
+    headers = {
+      "Authorization" = "Bearer 869c2504-6af8-4549-8df6-454220c617ba",
+    }
+  }
+}
+
+prometheus.exporter.unix "imperial_node" {
+  procfs_path = "/proc"
+  sysfs_path  = "/sys"
+  disable_collectors = ["arp", "bcache", "bonding", "conntrack", "cpu", "cpufreq", "diskstats", "edac", "entropy", "exec", "filefd", "filesystem", "hwmon", "infiniband", "ipvs", "loadavg", "mdadm", "meminfo", "netclass", "netdev", "netstat", "nfs", "nfsd", "powersupplyclass", "pressure", "rapl", "schedstat", "sockstat", "softnet", "stat", "thermal_zone", "time", "timex", "udp_queues", "uname", "vmstat", "xfs", "zfs"]
+}
+
+prometheus.scrape "imperial_scrape" {
+  targets    = prometheus.exporter.unix.imperial_node.targets
+  forward_to = [prometheus.remote_write.imperial_bridge.receiver]
+  scrape_native_histograms = true
+  scrape_protocols = ["PrometheusProto", "OpenMetricsText1.0.0"]
+}
+
+prometheus.scrape "alloy_check" {
+  targets = [{"__address__" = "127.0.0.1:12345"}]
+  forward_to = [prometheus.remote_write.imperial_bridge.receiver]
+}

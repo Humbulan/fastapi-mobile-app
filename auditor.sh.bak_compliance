@@ -1,0 +1,35 @@
+# Copyright 2026 Humbulani Mudau (Imperial Network)
+# Licensed under Apache License 2.0
+
+#!/bin/bash
+# IMPERIAL NETWORK - LEAD AUDITOR (Hybrid Logic)
+
+MANIFEST="$1"
+TONS=$(echo "$MANIFEST" | grep -o '[0-9]\+' | head -1)
+[ -z "$TONS" ] && TONS=0
+COMMISSION=$((TONS * 4))
+
+if [ "$TONS" -ge 42 ]; then
+    STATUS="⚠️ CRITICAL"
+    ASSESSMENT="OVERWEIGHT - FLAG FOR REVIEW"
+else
+    STATUS="✅ PASS"
+    ASSESSMENT="Within SADC limits"
+fi
+
+echo "🦞 IMPERIAL AUDITOR - Humbu Wandeme Trading Enterprise"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Status: $STATUS"
+echo "Weight: $TONS tons ($ASSESSMENT)"
+echo "Commission (R4): R$COMMISSION"
+echo "Route: Giyani → Beira (VERIFIED)"
+echo "---------------------------------------------------"
+echo -n "Auditor Notes: "
+
+# Let the AI only handle the commentary
+JSON_DATA=$(jq -n --arg m "qwen:0.5b" --arg p "Write a 1-sentence professional observation about this shipment: $MANIFEST" '{model: $m, prompt: $p, stream: false, temperature: 0.1}')
+curl -s -X POST http://127.0.0.1:11434/api/generate -H "Content-Type: application/json" -d "$JSON_DATA" | jq -r '.response'
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if [ "$TONS" -ge 42 ]; then
+    echo "⚠️ ALERT [$(date)]: CRITICAL LOAD $MANIFEST" >> ~/imperial_network/alerts.log
+fi

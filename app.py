@@ -1,26 +1,21 @@
 import os
-import sqlite3
 import secrets
 import datetime
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from Crypto.Hash import SHA256
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file, g, session, after_this_request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
-def hash_password(password):
-    """Hash password using SHA256"""
-    from Crypto.Hash import SHA256
-    return SHA256.new(password.encode()).hexdigest()
+from auth_utils import hash_password, verify_password, load_secret_key
 
 
 # Database configuration
 DATABASE = os.path.join(os.path.dirname(__file__), "instance", "imperial.db")
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'imperial_secret_123'
+app.config['SECRET_KEY'] = load_secret_key()
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -262,11 +257,28 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
-        if user and user.password == hash_password(password):
-            login_user(user)
-            session["role"] = user.role
-            return redirect(url_for('dashboard'))
-        flash('Invalid credentials')
+        if user:
+            ok, needs_rehash = verify_password(user.password, password)
+            if ok:
+                # Auto-migrate legacy SHA-256 hashes to bcrypt on success.
+                # Self-healing: every successful login rotates the row
+                # exactly once, then never again.
+                if needs_rehash:
+                    user.password = hash_password(password)
+                    db.session.commit()
+                login_user(user)
+                session["role"] = user.role
+                return redirect(url_for('dashboard'))
+        if user:
+            ok, needs_rehash = verify_password(user.password, password)
+            if ok:
+                if needs_rehash:
+                    user.password = hash_password(password)
+                    db.session.commit()
+                login_user(user)
+                session["role"] = user.role
+                return redirect(url_for("dashboard"))
+        flash("Invalid credentials")
     return render_template('login.html')
 
 @app.route('/dashboard')
@@ -356,74 +368,46 @@ def api_admin_keys():
 
 
 
-# ==================== USSD & BUSINESS ROUTES ====================
+@app.route('/notification-settings')
+@login_required
+def notification_settings():
+    return render_template('notification_settings.html')
 
 @app.route('/ai/dashboard')
 @login_required
 def ai_dashboard():
-    from datetime import datetime, timedelta
-    
-    # Get stats from database
     total_users = User.query.count()
     active_users = User.query.filter(User.id.in_(db.session.query(Order.customer_id).distinct())).count()
     new_users = User.query.filter(User.created_at >= datetime.now() - timedelta(days=30)).count()
     
-    # Health metrics with beautiful formatting
     health = {
         "system_health": "99.9%",
         "active_services": 12,
-        "total_services": 12,
-        "database_status": "connected",
-        "api_status": "online"
+        "total_services": 12
     }
-    
-    # Stats dictionary with all metrics
-    stats = {
-        'active_users': active_users,
-        'new_users': new_users,
-        'total_users': total_users,
-        'total_orders': Order.query.count(),
-        'total_payments': Payment.query.count(),
-        'total_villages': Village.query.count()
-    }
-    
-    # Beautiful predictions data
     predictions = {
-        'revenue': 45600.00,
-        'orders': 245,
-        'growth': 15,
-        'next_month_revenue': 52000.00,
-        'next_month_orders': 280,
-        'confidence': 0.87,
-        'trend': 'up',
-        'village_predictions': [
-            {'name': 'Bindura Urban', 'growth': 12.5},
-            {'name': 'Guruve South', 'growth': 8.3},
-            {'name': 'Mvurwi Central', 'growth': 15.2},
-            {'name': 'Shamva North', 'growth': 10.7}
-        ]
+        "revenue": 45600.00,
+        "orders": 245,
+        "growth": 15
     }
-    
-    return render_template('ai_dashboard.html', health=health, stats=stats, predictions=predictions)
+    stats = {
+        "active_users": 300,
+        "new_users": 15,
+        "total_users": 315
+    }
+    return render_template("ai_dashboard.html", health=health, stats=stats, predictions=predictions)
+
+@app.route("/admin/keys")
+@login_required
+def admin_keys():
+    return render_template("admin_keys.html")
 
 @app.route("/ussd", methods=["POST", "GET"])
 def ussd_handler():
-    """Handle USSD requests from mobile phones"""
     text = request.values.get("text", "")
     if text == "":
         return "CON Welcome to Imperial Village System\n1. Register\n2. Check Balance\n3. Make Payment"
-    elif text == "1":
-        return "CON Enter your village code:"
-    elif text == "2":
-        return "CON Your balance is $25.50"
-    else:
-        return "END Transaction processed successfully"
-
-@app.route("/ussd/simulate")
-@login_required
-def ussd_simulate():
-    return render_template("ussd_admin.html", simulation=True)
-
+    return "END Session Closed"
 @app.route("/api/business/data")
 @login_required
 def get_business_data():
@@ -442,39 +426,7 @@ def get_business_data():
     except:
         return jsonify({"success": False, "message": "Database error"})
 
-
-@app.route('/admin/keys')
-@login_required
-def admin_keys():
-    return render_template('admin_keys.html')
-
-@app.route('/api/admin/generate_key', methods=['POST'])
-@login_required
-def generate_humbu_key():
-    data = request.get_json()
-    v_id = data.get('village_id')
-    import secrets
-    new_key = f"humbu_{secrets.token_urlsafe(32)}"
-    
-    village = Village.query.get(v_id)
-    if not village:
-        return jsonify({'error': 'Imperial Village not found'}), 404
-        
-    existing = ApiKey.query.filter_by(village_id=v_id).first()
-    if existing:
-        existing.key = new_key
-    else:
-        db.session.add(ApiKey(village_id=v_id, key=new_key))
-    
-    db.session.commit()
-    return jsonify({'status': 'success', 'key': new_key, 'owner': 'Humbulani Mudau'})
-
-@app.route("/api/v1/write", methods=["POST"])
-def prometheus_write():
-    return "", 204
-
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host="0.0.0.0", port=8000)
-
+    app.run(debug=False, use_reloader=False, host="0.0.0.0", port=8005)

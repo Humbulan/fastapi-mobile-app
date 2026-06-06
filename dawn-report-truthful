@@ -112,3 +112,7 @@ echo "Technical Authority: ORCID 0009-0000-9572-4535"
 echo "IDC Status: Enquiry #4000120009 (Permanently Satisfied)"
 echo "Funding Scheme: Gro-E Youth Scheme (Industrial Expansion)"
 echo "========================================================="
+
+echo "-------------------------------------------------------"
+echo "📡 NGROK TUNNEL STATUS"
+echo "-------------------------------------------------------"

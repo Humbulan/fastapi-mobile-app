@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IMPERIAL POWER DASHBOARD</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; padding: 20px; border: 2px solid #050; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { border: 1px solid #050; padding: 15px; background: #010; }
+        .crit { color: #f00; font-weight: bold; }
+        .pass { color: #0f0; }
+        h1 { text-align: center; letter-spacing: 5px; text-shadow: 0 0 10px #0f0; }
+        hr { border: 0; border-top: 1px solid #050; }
+    </style>
+</head>
+<body>
+    <h1>IMPERIAL POWER DASHBOARD</h1>
+    <p align="center">SYSTEM STATUS: ● ONLINE | TIME: 12:57:24</p>
+    <hr>
+    <div class="grid">
+        <div class="card">
+            <h3>💰 FINANCIAL CORE</h3>
+            <p>Portfolio Value: R 11,345,774.22</p>
+            <p>True Valuation: R 1,800,000,000.00</p>
+            <p>R4 Commission (Today): R 4,824</p>
+        </div>
+        <div class="card">
+            <h3>🚚 SADC LOGISTICS</h3>
+            <p>Status: ACTIVE</p>
+            <p>Total Manifests: 7</p>
+            <p class="crit">Critical Loads: 4</p>
+            <p class="pass">Verified (PASS): 3</p>
+        </div>
+        <div class="card">
+            <h3>⚡ SYSTEM METRICS</h3>
+            <p>CPU Load: 0.00</p>
+            <p>Memory Free: 1.0 GB</p>
+            <p>Uptime: 3 weeks, 6 days, 1 hour, 28 minutes</p>
+            <p>Last Audit: 12:44:35</p>
+        </div>
+        <div class="card">
+            <h3>📜 LOG FEED</h3>
+            <pre style="font-size: 10px;">
+2026-03-06 10:12:45 ⚠️ CRITICAL - Maputo Transport, 46 tons Sugar - EXCEEDS LIMIT
+2026-03-06 10:28:31 ✅ PASS - Moztrans Logistics, 38 tons Soybeans - Within limits
+2026-03-06 10:42:19 ✅ PASS - Beira Freight, 28 tons Timber - Verified
+2026-03-06 11:03:57 ✅ PASS - Limpopo Haulage, 41 tons Citrus - Approved
+2026-03-06 11:15:22 ⚠️ CRITICAL - Phaswana Carriers, 42 tons Maize - AT THRESHOLD
+            </pre>
+        </div>
+    </div>
+    <p align="center" style="font-size: 10px; color: #050;">STEALTH MODE | ORCID: 0009-0000-9572-4535</p>
+</body>
+</html>

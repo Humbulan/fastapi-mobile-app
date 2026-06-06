@@ -85,7 +85,8 @@ if ('users',) in tables:
         
         # Create password hash
         default_password = f"changeme_{username}"
-        password_hash = hashlib.sha256(default_password.encode()).hexdigest()
+        from auth_utils import hash_password
+        password_hash = hash_password(default_password)
         
         # Insert
         try:

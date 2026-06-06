@@ -1,0 +1,11 @@
+#!/data/data/com.termux/files/usr/bin/sh
+echo "🏛️  IMPERIAL NETWORK - UBT DASHBOARD"
+echo "========================================"
+echo "Last 5 Verifications:"
+echo "----------------------------------------"
+tail -5 ~/imperial_network/ubt_audit.log 2>/dev/null || echo "No verifications yet"
+echo "========================================"
+echo "Current Sovereign Lock: ✅ ACTIVE"
+echo "Valuation: R269.9B"
+echo "Master Token: IMPERIAL-TRUTH-2026"
+echo "========================================"

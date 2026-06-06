@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FastAPI Mobile App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 25px;
+            margin: 10px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn-premium {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+        .btn-test {
+            background: #28a745;
+        }
+        .btn-logout {
+            background: #dc3545;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Dashboard - FastAPI Mobile App</h1>
+        
+        <div class="user-info">
+            <h2>Welcome, <span id="username">User</span>!</h2>
+            <p>You are successfully logged in to your dashboard</p>
+            <p><strong>Status:</strong> <span id="premium-status">Standard User</span></p>
+        </div>
+
+        <h2>🛠️ Available Tools</h2>
+        <div class="button-grid">
+            <button class="btn" onclick="openCalculator()">🔢 Calculator</button>
+            <button class="btn" onclick="openTextTools()">📝 Text Tools</button>
+            <button class="btn btn-premium" onclick="openPremium()">⭐ Premium Features</button>
+            <a href="/test-auth" class="btn btn-test">🧪 Test Auth Page</a>
+            <a href="/" class="btn">🏠 Home Page</button>
+            <button class="btn btn-logout" onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <h2>🧪 Test Buttons</h2>
+        <div class="button-grid">
+            <button class="btn" onclick="testButton1()">Test Button 1</button>
+            <button class="btn" onclick="testButton2()">Test Button 2</button>
+            <button class="btn" onclick="testButton3()">Test Button 3</button>
+            <button class="btn" onclick="showUserInfo()">Show User Info</button>
+        </div>
+
+        <div id="debug-info" style="margin-top: 30px; padding: 15px; background: #e9ecef; border-radius: 8px;">
+            <h3>🔍 Debug Information</h3>
+            <p id="debug-text">Loading user information...</p>
+        </div>
+    </div>
+
+    <script>
+        // Simple debug function
+        function debug(message) {
+            console.log('🔧 ' + message);
+            const debugEl = document.getElementById('debug-text');
+            if (debugEl) {
+                debugEl.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+            }
+        }
+
+        // Get user info
+        const username = localStorage.getItem('username');
+        const token = localStorage.getItem('access_token');
+        const isPremium = localStorage.getItem('premium') === 'true';
+
+        debug('Dashboard loaded');
+        debug('Username: ' + (username || 'Not found'));
+        debug('Token: ' + (token ? 'Present' : 'Missing'));
+        debug('Premium: ' + isPremium);
+
+        // Check authentication
+        if (!token || !username) {
+            alert('❌ Please login to access the dashboard');
+            window.location.href = '/';
+        }
+
+        // Update UI
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').textContent = username || 'Unknown';
+            
+            const premiumStatus = document.getElementById('premium-status');
+            if (isPremium) {
+                premiumStatus.textContent = '⭐ PREMIUM USER';
+                premiumStatus.style.color = '#28a745';
+                premiumStatus.style.fontWeight = 'bold';
+            } else {
+                premiumStatus.textContent = 'Standard User';
+                premiumStatus.style.color = '#6c757d';
+            }
+            
+            debug('UI updated successfully');
+        });
+
+        // Button functions
+        function openCalculator() {
+            debug('Calculator button clicked');
+            alert('🎯 Opening Calculator...');
+            window.location.href = '/';
+        }
+
+        function openTextTools() {
+            debug('Text Tools button clicked');
+            alert('🎯 Opening Text Tools...');
+            window.location.href = '/';
+        }
+
+        function openPremium() {
+            debug('Premium button clicked');
+            if (!isPremium) {
+                alert('⭐ Premium Features\n\nUpgrade required for:\n• Currency Converter\n• Advanced Analytics\n• Priority Support');
+            } else {
+                alert('🎉 Premium Features Unlocked!\n\nAccess to all premium tools enabled.');
+            }
+        }
+
+        function logout() {
+            debug('Logout button clicked');
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('premium');
+            alert('✅ Logged out successfully');
+            window.location.href = '/';
+        }
+
+        // Test functions
+        function testButton1() {
+            debug('Test Button 1 clicked');
+            alert('✅ Test Button 1 Working!');
+        }
+
+        function testButton2() {
+            debug('Test Button 2 clicked');
+            alert('✅ Test Button 2 Working!');
+        }
+
+        function testButton3() {
+            debug('Test Button 3 clicked');
+            alert('✅ Test Button 3 Working!');
+        }
+
+        function showUserInfo() {
+            debug('Show User Info clicked');
+            alert('👤 User Information:\n\nUsername: ' + username + '\nPremium: ' + (isPremium ? 'Yes' : 'No'));
+        }
+
+        // Log that script is loaded
+        debug('All JavaScript functions loaded successfully');
+    </script>
+</body>
+</html>

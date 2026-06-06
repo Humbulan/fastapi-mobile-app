@@ -14,8 +14,8 @@ from pathlib import Path
 
 class ImperialNotifier:
     def __init__(self):
-        self.config = self.load_config('notification_config.json')
-        self.smtp_config = self.load_config('smtp_config.json')
+        self.config = self.load_config('/data/data/com.termux/files/home/imperial_network/notification_config.json')
+        self.smtp_config = self.load_config('/data/data/com.termux/files/home/imperial_network/smtp_config.json')
         self.sovereign = self.config['sovereign']
         self.email = self.config['contacts']['primary_email']
         self.phone = self.config['contacts']['primary_phone']

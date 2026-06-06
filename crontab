@@ -1,0 +1,1 @@
+@reboot ~/imperial_network/ollama-watchdog.sh -l

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Mobile App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .btn { display: block; padding: 15px 20px; margin: 10px 0; background: #007bff; color: white; text-decoration: none; border-radius: 8px; text-align: center; border: none; cursor: pointer; transition: all 0.3s ease; }
+        .btn:hover { background: #0056b3; transform: translateY(-2px); }
+        .btn-premium { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .btn-test { background: #28a745; }
+        #auth-status { margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; text-align: center; }
+    </style>
+</head>
+<body>
+    <!-- Dashboard Handler - MUST BE FIRST -->
+    <script src="/static/js/dashboard-handler.js"></script>
+
+    <div class="container">
+        <h1>FastAPI Mobile App</h1>
+        <p>Premium Calculator & Text Tools</p>
+        
+        <!-- Auth Status -->
+        <div id="auth-status">
+            <a href="#" onclick="showLogin()">Login</a> | 
+            <a href="#" onclick="showRegister()">Register</a>
+        </div>
+
+        <!-- Dashboard Button -->
+        <button id="dashboard-btn" class="btn" style="background: #28a745; display: none;">
+            🎯 Go to Dashboard
+        </button>
+
+        <!-- Test Buttons -->
+        <button class="btn" onclick="testCalculator()">Test Calculator</button>
+        <button class="btn" onclick="testTextTools()">Test Text Tools</button>
+        <button class="btn btn-premium" onclick="testPremium()">Test Premium Features</button>
+        <a href="/test-auth" class="btn btn-test">Test Authentication Page</a>
+
+        <!-- Debug Section -->
+        <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <button class="btn" onclick="debugAuth()" style="background: #6f42c1; font-size: 12px; padding: 8px 15px;">
+                🔧 Debug Auth Status
+            </button>
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                Check browser console (F12) for detailed logs
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication functions
+        function showLogin() {
+            const username = prompt('Enter username:');
+            const password = prompt('Enter password:');
+            if (username && password) {
+                fetch('/api/local/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.access_token) {
+                        localStorage.setItem('access_token', data.access_token);
+                        localStorage.setItem('username', data.username);
+                        localStorage.setItem('premium', data.premium);
+                        dashboardHandler.updateDashboardLink();
+                        alert('✅ Login successful!');
+                    } else {
+                        alert('❌ Login failed: ' + (data.detail || 'Unknown error'));
+                    }
+                })
+                .catch(err => {
+                    alert('❌ Login error: ' + err.message);
+                });
+            }
+        }
+
+        function showRegister() {
+            const username = prompt('Enter username:');
+            const email = prompt('Enter email:');
+            const fullName = prompt('Enter full name:');
+            const password = prompt('Enter password:');
+            if (username && email && fullName && password) {
+                fetch('/api/local/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, full_name: fullName })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.access_token) {
+                        localStorage.setItem('access_token', data.access_token);
+                        localStorage.setItem('username', data.username);
+                        localStorage.setItem('premium', data.premium);
+                        dashboardHandler.updateDashboardLink();
+                        alert('✅ Registration successful!');
+                    } else {
+                        alert('❌ Registration failed: ' + (data.detail || 'Unknown error'));
+                    }
+                })
+                .catch(err => {
+                    alert('❌ Registration error: ' + err.message);
+                });
+            }
+        }
+
+        // Test functions
+        function testCalculator() {
+            alert('🧪 Testing Calculator functionality...');
+        }
+
+        function testTextTools() {
+            alert('🧪 Testing Text Tools functionality...');
+        }
+
+        function testPremium() {
+            const isPremium = localStorage.getItem('premium') === 'true';
+            if (!isPremium) {
+                alert('🧪 Premium Test: Upgrade required for premium features');
+            } else {
+                alert('🧪 Premium Test: All premium features available!');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Home page loaded');
+            dashboardHandler.updateDashboardLink();
+        });
+    </script>
+</body>
+</html>
