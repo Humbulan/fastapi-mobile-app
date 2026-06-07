@@ -20,7 +20,10 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          set-safe-directory: 'true'
 
       - name: Set up Python version
         uses: actions/setup-python@v5
