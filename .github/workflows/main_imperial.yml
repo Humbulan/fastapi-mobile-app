@@ -1,4 +1,4 @@
-name: Deploy minimal app
+name: Deploy real FastAPI app
 on:
   push:
     branches: [ main ]
@@ -16,9 +16,9 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DD164541268243B3842563E45DB21044 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C49D636A06084AF0A8ABC17506B0758F }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DA4F79CD9A474A8D9EA4A05228308685 }}
-      - name: Deploy with minimal app
+      - name: Deploy real app
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'imperial'
           package: .
-          startup-command: 'uvicorn app:app --host 0.0.0.0 --port 8000'
+          startup-command: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker fastapi-mobile-app.main:app'
