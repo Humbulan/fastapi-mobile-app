@@ -42,13 +42,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
-      
+
       - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DD164541268243B3842563E45DB21044 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C49D636A06084AF0A8ABC17506B0758F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DA4F79CD9A474A8D9EA4A05228308685 }}
+         uses: azure/login@v2
+         with:
+           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DD164541268243B3842563E45DB21044 }}
+           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C49D636A06084AF0A8ABC17506B0758F }}
+           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DA4F79CD9A474A8D9EA4A05228308685 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -56,3 +56,4 @@ jobs:
         with:
           app-name: 'imperial'
           slot-name: 'Production'
+          startup-command: 'python3 -m uvicorn fastapi-mobile-app.main:app --host 0.0.0.0 --port 8000'
