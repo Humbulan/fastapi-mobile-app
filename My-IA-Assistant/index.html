@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My IA Assistant 🤖 - Web Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .chat-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .user-message {
+            background: rgba(255, 255, 255, 0.2);
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .ai-message {
+            background: rgba(74, 144, 226, 0.3);
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        #user-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        #send-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        #send-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .mode-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #4ecdc4;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .command-hint {
+            text-align: center;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 My IA Assistant</h1>
+            <p>Chat with AI directly in your browser!</p>
+        </div>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="assistant">🟢 Assistant</button>
+            <button class="mode-btn" data-mode="creative">🟡 Creative</button>
+            <button class="mode-btn" data-mode="expert">🔵 Expert</button>
+            <button class="mode-btn" data-mode="friendly">🟣 Friendly</button>
+            <button class="mode-btn" data-mode="coder">💻 Coder</button>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="message ai-message">
+                    🤖 Hello! I'm your IA Assistant. I can help you with:<br><br>
+                    • <strong>Time & Date</strong> - Ask "time" or "date"<br>
+                    • <strong>Jokes & Facts</strong> - Say "joke" or "fact"<br>
+                    • <strong>Advice & Quotes</strong> - Try "advice" or "quote"<br>
+                    • <strong>Stories</strong> - Type "story"<br>
+                    • <strong>Projects</strong> - "project tech/business/creative/learning"<br>
+                    • <strong>Calculations</strong> - "calc 15+8" or "calc 20-5"<br>
+                    • <strong>Code Help</strong> - Switch to Coder mode and say "code"<br><br>
+                    Switch modes using the buttons above! 🚀
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typing">AI is typing...</div>
+            
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Type your message... (try 'help' for commands)" autocomplete="off">
+                <button id="send-btn">Send</button>
+            </div>
+            
+            <div class="command-hint">
+                Try: help, time, joke, fact, story, calc 15+8, project tech
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WebAI {
+            constructor() {
+                this.mode = 'assistant';
+                this.chatMessages = document.getElementById('chat-messages');
+                this.userInput = document.getElementById('user-input');
+                this.sendBtn = document.getElementById('send-btn');
+                this.typingIndicator = document.getElementById('typing');
+                this.modeButtons = document.querySelectorAll('.mode-btn');
+                
+                this.init();
+            }
+            
+            init() {
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.userInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+                
+                this.modeButtons.forEach(btn => {
+                    btn.addEventListener('click', () => this.changeMode(btn.dataset.mode));
+                });
+            }
+            
+            changeMode(newMode) {
+                this.mode = newMode;
+                this.modeButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.mode === newMode);
+                });
+                this.addMessage('ai', `Switched to ${newMode} mode! 🎯`);
+            }
+            
+            addMessage(sender, text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}-message`;
+                messageDiv.innerHTML = text;
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            showTyping() {
+                this.typingIndicator.style.display = 'block';
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            hideTyping() {
+                this.typingIndicator.style.display = 'none';
+            }
+            
+            simulateThinking() {
+                return new Promise(resolve => {
+                    setTimeout(resolve, 1000 + Math.random() * 1000);
+                });
+            }
+            
+            getTime() {
+                const now = new Date();
+                return `🕒 Current time: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            }
+            
+            getDate() {
+                const now = new Date();
+                return `📅 Today is ${now.toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}`;
+            }
+            
+            getJoke() {
+                const jokes = [
+                    "Why don't scientists trust atoms? Because they make up everything!",
+                    "Why did the scarecrow win an award? He was outstanding in his field!",
+                    "What do you call a fake noodle? An impasta!",
+                    "Why don't skeletons fight each other? They don't have the guts!"
+                ];
+                return `😂 ${jokes[Math.floor(Math.random() * jokes.length)]}`;
+            }
+            
+            getFact() {
+                const facts = [
+                    "Honey never spoils! 3000-year-old honey found in Egyptian tombs is still perfectly edible!",
+                    "Octopuses have THREE hearts and blue blood! Two pump blood to the gills, one to the body.",
+                    "The Eiffel Tower can be 15cm taller during summer due to thermal expansion of the metal!",
+                    "There are more possible chess games than atoms in the known universe!"
+                ];
+                return `🔍 ${facts[Math.floor(Math.random() * facts.length)]}`;
+            }
+            
+            getAdvice() {
+                const advice = {
+                    assistant: "💡 Break big tasks into small, achievable steps and celebrate your progress!",
+                    creative: "💡 Keep an idea journal - inspiration often strikes at unexpected moments!",
+                    expert: "💡 Document your process systematically - it helps with analysis and improvement!",
+                    friendly: "💡 Remember to take breaks and be kind to yourself! You're doing great! 😊",
+                    coder: "💡 Write clean, readable code and test each component as you build!"
+                };
+                return advice[this.mode] || advice.assistant;
+            }
+            
+            getQuote() {
+                const quotes = [
+                    "💫 'The only way to do great work is to love what you do.' - Steve Jobs",
+                    "💫 'The future belongs to those who believe in the beauty of their dreams.' - Eleanor Roosevelt",
+                    "💫 'Success is not final, failure is not fatal: it is the courage to continue that counts.' - Winston Churchill"
+                ];
+                return quotes[Math.floor(Math.random() * quotes.length)];
+            }
+            
+            getStory() {
+                const stories = {
+                    creative: "📖 Once upon a time, a curious artist discovered that every color told a story. They mixed hues never seen before, creating paintings that made people feel emotions they didn't know they had! The world became more beautiful with each brushstroke. 🌈",
+                    expert: "📖 In the halls of knowledge, a wise mentor discovered that true expertise wasn't about knowing all the answers, but about asking the right questions. They taught others to think critically, and together they solved problems that once seemed impossible! 🔬",
+                    coder: "📖 A programmer once found a bug that had eluded everyone for weeks. Instead of frustration, they felt excitement - each error was a clue! They debugged systematically, and when the code finally ran perfectly, they knew they'd created something amazing! 💻",
+                    default: "📖 Once a programmer discovered a magical algorithm that could solve any problem. They shared it with the world, and everyone lived creatively ever after! Each line of code brought new possibilities to life. 🌟"
+                };
+                return stories[this.mode] || stories.default;
+            }
+            
+            getProjectHelp(projectType) {
+                const projects = {
+                    tech: `🚀 TECHNOLOGY PROJECT PLAN:<br>
+1. Define requirements and scope<br>
+2. Choose your technology stack<br>
+3. Set up development environment<br>
+4. Build core functionality first<br>
+5. Test each component thoroughly<br>
+6. Deploy and gather user feedback<br>
+7. Iterate and improve continuously<br><br>
+💡 Start with a Minimum Viable Product (MVP)!`,
+                    
+                    business: `💼 BUSINESS PROJECT PLAN:<br>
+1. Conduct market research and analysis<br>
+2. Define your unique value proposition<br>
+3. Create detailed business model<br>
+4. Develop Minimum Viable Product<br>
+5. Test with target customers<br>
+6. Refine based on feedback<br>
+7. Plan marketing and launch strategy<br><br>
+💡 Focus on solving real customer problems!`,
+                    
+                    creative: `🎨 CREATIVE PROJECT PLAN:<br>
+1. Define your creative vision and goals<br>
+2. Gather inspiration and references<br>
+3. Create mood boards and concept sketches<br>
+4. Develop initial prototypes or drafts<br>
+5. Get feedback from your target audience<br>
+6. Refine and perfect the creative work<br>
+7. Prepare for presentation or publication<br><br>
+💡 Authenticity resonates more than perfection!`,
+                    
+                    learning: `📚 LEARNING PROJECT PLAN:<br>
+1. Set clear learning objectives<br>
+2. Assess your current knowledge level<br>
+3. Gather learning resources and materials<br>
+4. Create a realistic study schedule<br>
+5. Practice and apply knowledge regularly<br>
+6. Track your progress and adjust approach<br>
+7. Review and reinforce your learning<br><br>
+💡 Teaching others solidifies your understanding!`
+                };
+                
+                return projects[projectType] || "📋 Available project types: <strong>tech, business, creative, learning</strong><br>Try: 'project tech' or 'project business'";
+            }
+            
+            calculate(expression) {
+                try {
+                    if (expression.includes('+')) {
+                        const parts = expression.split('+');
+                        const a = parseFloat(parts[0]);
+                        const b = parseFloat(parts[1]);
+                        if (!isNaN(a) && !isNaN(b)) {
+                            return `📊 ${a} + ${b} = <strong>${a + b}</strong>`;
+                        }
+                    } else if (expression.includes('-')) {
+                        const parts = expression.split('-');
+                        const a = parseFloat(parts[0]);
+                        const b = parseFloat(parts[1]);
+                        if (!isNaN(a) && !isNaN(b)) {
+                            return `📊 ${a} - ${b} = <strong>${a - b}</strong>`;
+                        }
+                    }
+                    return "Try: <strong>calc 15+8</strong> or <strong>calc 20-5</strong>";
+                } catch (error) {
+                    return "Use numbers like: <strong>calc 15+8</strong> or <strong>calc 20-5</strong>";
+                }
+            }
+            
+            getCodeHelp() {
+                if (this.mode === 'coder') {
+                    return `💻 PYTHON CODE EXAMPLE:<br><br>
+<pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; overflow-x: auto;">
+# Simple Web Calculator
+def calculator():
+    print("🧮 Simple Calculator")
+    
+    try:
+        num1 = float(input("Enter first number: "))
+        num2 = float(input("Enter second number: "))
+        operation = input("Enter operation (+, -, *, /): ")
+        
+        if operation == '+':
+            result = num1 + num2
+        elif operation == '-':
+            result = num1 - num2
+        elif operation == '*':
+            result = num1 * num2
+        elif operation == '/':
+            result = num1 / num2
+        else:
+            result = "❌ Invalid operation"
+        
+        print(f"✅ Result: {result}")
+        
+    except ValueError:
+        print("❌ Please enter valid numbers!")
+    except ZeroDivisionError:
+        print("❌ Cannot divide by zero!")
+
+# Run the calculator
+calculator()</pre>`;
+                } else {
+                    return "💻 Switch to <strong>Coder mode</strong> for programming help and code examples!";
+                }
+            }
+            
+            getHelp() {
+                return `🎯 <strong>AVAILABLE COMMANDS:</strong><br><br>
+• <strong>help</strong> - Show this help message<br>
+• <strong>time</strong> - Current time<br>
+• <strong>date</strong> - Today's date<br>
+• <strong>joke</strong> - Random joke<br>
+• <strong>fact</strong> - Interesting fact<br>
+• <strong>advice</strong> - Helpful advice<br>
+• <strong>quote</strong> - Inspirational quote<br>
+• <strong>story</strong> - Creative story<br>
+• <strong>project [type]</strong> - Project plans (tech/business/creative/learning)<br>
+• <strong>calc [expression]</strong> - Math calculations (15+8, 20-5)<br>
+• <strong>code</strong> - Programming help (Coder mode)<br><br>
+<strong>Switch modes using the buttons above!</strong> 🚀`;
+            }
+            
+            async processMessage(message) {
+                const lowerMessage = message.toLowerCase().trim();
+                
+                if (lowerMessage === 'help') {
+                    return this.getHelp();
+                } else if (lowerMessage === 'time') {
+                    return this.getTime();
+                } else if (lowerMessage === 'date') {
+                    return this.getDate();
+                } else if (lowerMessage === 'joke') {
+                    return this.getJoke();
+                } else if (lowerMessage === 'fact') {
+                    return this.getFact();
+                } else if (lowerMessage === 'advice') {
+                    return this.getAdvice();
+                } else if (lowerMessage === 'quote') {
+                    return this.getQuote();
+                } else if (lowerMessage === 'story') {
+                    return this.getStory();
+                } else if (lowerMessage === 'code') {
+                    return this.getCodeHelp();
+                } else if (lowerMessage.startsWith('project ')) {
+                    const projectType = lowerMessage.replace('project ', '');
+                    return this.getProjectHelp(projectType);
+                } else if (lowerMessage.startsWith('calc ')) {
+                    const expression = lowerMessage.replace('calc ', '');
+                    return this.calculate(expression);
+                } else {
+                    return `I'm not sure how to help with "<strong>${message}</strong>"<br><br>Type <strong>help</strong> to see all available commands!`;
+                }
+            }
+            
+            async sendMessage() {
+                const message = this.userInput.value.trim();
+                if (!message) return;
+                
+                // Add user message
+                this.addMessage('user', message);
+                this.userInput.value = '';
+                
+                // Show typing indicator
+                this.showTyping();
+                
+                // Simulate AI thinking
+                await this.simulateThinking();
+                
+                // Hide typing and add AI response
+                this.hideTyping();
+                const response = await this.processMessage(message);
+                this.addMessage('ai', response);
+            }
+        }
+        
+        // Initialize the AI when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new WebAI();
+        });
+    </script>
+</body>
+</html>
