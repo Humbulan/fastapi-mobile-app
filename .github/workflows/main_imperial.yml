@@ -42,6 +42,11 @@ jobs:
         with:
           name: python-app
 
+      - name: Fix root files for Azure
+        run: |
+          cp fastapi-mobile-app/requirements.txt .
+          echo "web: uvicorn fastapi-mobile-app.main:app --host 0.0.0.0 --port \${PORT:-8000} --workers 1" > Procfile
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -55,4 +60,3 @@ jobs:
         with:
           app-name: 'imperial'
           slot-name: 'Production'
-          startup-command: 'python3 -m uvicorn fastapi-mobile-app.main:app --host 0.0.0.0 --port 8000'
