@@ -1,0 +1,17 @@
+name: Restart Azure App
+on:
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  restart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DD164541268243B3842563E45DB21044 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C49D636A06084AF0A8ABC17506B0758F }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DA4F79CD9A474A8D9EA4A05228308685 }}
+      - name: Restart web app
+        run: az webapp restart --name imperial --resource-group imperial-network-rg
