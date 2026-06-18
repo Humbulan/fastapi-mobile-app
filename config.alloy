@@ -13,7 +13,7 @@ clustering {
 
 prometheus.remote_write "imperial_bridge" {
   endpoint {
-    url = "https://api.humbu.store/api/v1/write"
+    url = "http://127.0.0.1:8086/api/v1/write"
     headers = {
       "Authorization" = "Bearer 869c2504-6af8-4549-8df6-454220c617ba",
     }

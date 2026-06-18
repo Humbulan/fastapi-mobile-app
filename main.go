@@ -275,6 +275,15 @@ func main() {
 		return
 	}
 
+	// 22. Get real imperial metrics
+	if strings.Contains(lowerInput, "real metrics") {
+		cmd := "python3 ~/imperial_network/get_imperial_metrics.py"
+		fmt.Printf("\n[Imperial Agent] Fetching real metrics...\n")
+		result := executeCommand(cmd)
+		fmt.Printf("[Output]:\n%s\n", result)
+		return
+	}
+
 	// ========== FALLBACK to Python Claude‑like agent ==========
 	fmt.Printf("\n[Imperial Agent] No direct override. Asking Claude agent...\n")
 	cmd := fmt.Sprintf("cd ~/Build-your-own-Claude-Code && ./your_program.sh -p \"%s\"", strings.ReplaceAll(userInput, `"`, `\"`))

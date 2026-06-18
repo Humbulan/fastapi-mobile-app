@@ -1,8 +1,9 @@
+from db_config import get_db_connection
 import sqlite3
 from datetime import datetime
 
 db_path = 'instance/imperial.db'
-conn = sqlite3.connect(db_path)
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # 1. DEFINE THE FULL 17-VEHICLE FLEET (Bridging the gap)

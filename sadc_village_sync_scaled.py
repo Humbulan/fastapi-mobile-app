@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🔄 SADC-TO-VILLAGE SYNC - SCALED VERSION
 Rewards all 40 villages based on SADC logistics payments
@@ -10,7 +11,7 @@ from datetime import datetime
 print("🔄 SADC-TO-VILLAGE SYNC - SCALED (40 VILLAGES)")
 print("="*60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # 1. Get all villages from users table

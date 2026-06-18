@@ -1,3 +1,4 @@
+from db_config import get_db_connection
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import sqlite3
@@ -10,7 +11,7 @@ class MonitorHandler(BaseHTTPRequestHandler):
         self.end_headers()
         
         # Get system stats
-        conn = sqlite3.connect('instance/imperial.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute("SELECT COUNT(*) FROM users")

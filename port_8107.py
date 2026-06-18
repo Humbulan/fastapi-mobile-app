@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import sqlite3
@@ -15,7 +16,7 @@ class IDCHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         try:
-            conn = sqlite3.connect('instance/imperial.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT SUM(amount) FROM payment WHERE payment_method='SADC_A_LOGISTICS'")
             total = cursor.fetchone()[0] or 0

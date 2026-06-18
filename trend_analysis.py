@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Imperial Omega Historical Trend Analysis
 Generates reports and visualizations of network growth
@@ -20,7 +21,7 @@ class ImperialTrendAnalyzer:
         
     def get_historical_data(self, days=30):
         """Fetch historical metrics from database"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         cutoff = (datetime.now() - timedelta(days=days)).isoformat()
         
         query = f"""

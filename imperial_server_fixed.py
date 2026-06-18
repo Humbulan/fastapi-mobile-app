@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🏛️ IMPERIAL SERVER - FIXED VERSION
 Only marks vouchers as used AFTER successful AI response
@@ -20,7 +21,7 @@ DB_PATH = '/data/data/com.termux/files/home/imperial_network/vouchers.db'
 OLLAMA_URL = 'http://localhost:11434/api/generate'
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS vouchers (
@@ -65,7 +66,7 @@ def ai_chat():
         return jsonify({'success': False, 'message': 'Code and message required'})
     
     # First, validate voucher without marking as used
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
         SELECT id, value, status, used_count, max_uses, expires_at 
@@ -122,7 +123,7 @@ def ai_chat():
         
         # If we got a valid response, NOW mark voucher as used
         if ai_response and len(ai_response) > 10:
-            conn = sqlite3.connect(DB_PATH)
+            conn = get_db_connection()
             c = conn.cursor()
             c.execute("UPDATE vouchers SET used_count = used_count + 1 WHERE code=?", (code,))
             c.execute("""
@@ -135,7 +136,7 @@ def ai_chat():
             return jsonify({'success': True, 'response': ai_response, 'model_used': model_used})
         else:
             # Log failed attempt without using voucher
-            conn = sqlite3.connect(DB_PATH)
+            conn = get_db_connection()
             c = conn.cursor()
             c.execute("""
                 INSERT INTO usage_log (voucher_code, timestamp, session_minutes, ip_address, response_length, success)
@@ -154,7 +155,7 @@ def ai_chat():
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM vouchers")
     total = c.fetchone()[0]

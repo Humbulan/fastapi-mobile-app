@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Imperial Omega Milestone Alert System
 Tracks progress to R500B and sends email alerts for key milestones
@@ -56,7 +57,7 @@ class ImperialAlertSystem:
     def init_database(self):
         """Initialize SQLite database for alert history"""
         self.db_path = os.path.expanduser('~/imperial_network/alerts.db')
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS alerts
                      (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -157,7 +158,7 @@ class ImperialAlertSystem:
                 sent = self.send_email_alert(milestone['label'], milestone['message'])
                 
                 # Record in database
-                conn = sqlite3.connect(self.db_path)
+                conn = get_db_connection()
                 c = conn.cursor()
                 c.execute("INSERT INTO alerts (timestamp, milestone, message, sent) VALUES (?, ?, ?, ?)",
                          (datetime.now().isoformat(), milestone_val, milestone['message'], 1 if sent else 0))
@@ -189,7 +190,7 @@ class ImperialAlertSystem:
             villages = 43
             lithium_price = 4200
             
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute("INSERT INTO metrics (timestamp, valuation, villages, lithium_price) VALUES (?, ?, ?, ?)",
                  (datetime.now().isoformat(), current_val, villages, lithium_price))

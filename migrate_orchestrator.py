@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Migrate Master Orchestrator intelligence to Imperial Network
 """
@@ -12,7 +13,7 @@ print("🏛️ MIGRATING MASTER ORCHESTRATOR INTELLIGENCE")
 print("=" * 60)
 
 # Connect to Imperial DB
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Create tables for orchestrator data if they don't exist

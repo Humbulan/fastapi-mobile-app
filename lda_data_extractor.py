@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 import sqlite3
 import json
 import csv
@@ -12,7 +13,7 @@ corpus_path = 'lda_corpus.txt'
 metadata_path = 'lda_metadata.json'
 
 try:
-    conn = sqlite3.connect(db_path)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     print("\n📊 EXTRACTING TRANSACTION DATA...")

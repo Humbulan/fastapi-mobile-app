@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🌍 IMPERIAL SOVEREIGN TRUTH - Public Status Page
 Port 8097 - https://imperial.humbu.store/status
@@ -14,7 +15,7 @@ app = Flask(__name__)
 def get_sky_status():
     """Get latest sky-watcher status"""
     try:
-        conn = sqlite3.connect('instance/imperial.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT metric_text, recorded_at FROM imperial_metrics WHERE metric_name='sky_watcher_status' ORDER BY recorded_at DESC LIMIT 1")
         result = cursor.fetchone()
@@ -28,7 +29,7 @@ def get_sky_status():
 def get_economic_status():
     """Get latest economic status"""
     try:
-        conn = sqlite3.connect('instance/imperial.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT metric_value, metric_text, recorded_at FROM imperial_metrics WHERE metric_name='economic_status' ORDER BY recorded_at DESC LIMIT 1")
         result = cursor.fetchone()
@@ -48,7 +49,7 @@ def get_economic_status():
 def get_port_status():
     """Get port status summary"""
     try:
-        conn = sqlite3.connect('instance/imperial.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM system_sectors WHERE status='online'")
         online = cursor.fetchone()[0]

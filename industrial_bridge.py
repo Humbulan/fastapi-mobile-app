@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🏭 IMPERIAL INDUSTRIAL BRIDGE
 Connects SADC Logistics revenue to Gauteng manufacturing nodes
@@ -9,7 +10,7 @@ from datetime import datetime
 print("🏭 IMPERIAL INDUSTRIAL BRIDGE")
 print("="*60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # 1. Get current Gauteng node status

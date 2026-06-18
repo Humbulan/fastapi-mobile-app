@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 from Crypto.Hash import SHA256
 import sqlite3
 
@@ -7,7 +8,7 @@ def hash_password(password):
     return SHA256.new(password.encode()).hexdigest()
 
 # Connect to database
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Update admin password

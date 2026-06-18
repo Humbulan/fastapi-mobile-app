@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 📉 WAR-PRICE INDEX - Economic Early Warning
 Port 8103 (Intel Alpha)
@@ -77,7 +78,7 @@ class EconomicMonitor:
         
         # Update database
         try:
-            conn = sqlite3.connect('instance/imperial.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT OR REPLACE INTO imperial_metrics (metric_name, metric_value, metric_text, recorded_at)

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Gemini AI Council Distribution Optimizer
 Analyzes village patterns and suggests optimal payout strategies
@@ -20,7 +21,7 @@ print("🏛️ GEMINI COUNCIL DISTRIBUTION OPTIMIZER")
 print("=" * 60)
 
 # Connect to databases
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Get council data with village mapping
@@ -152,11 +153,14 @@ echo "💬 Language Templates Ready:"
 echo "   🏔️ Tshivenda: U wana R{amount} u bva kha Imperial Network"
 echo "   🌊 Xitsonga:  U kume R{amount} ku suka eka Imperial Network"
 echo "   🇬🇧 English:   You received R{amount} from Imperial Network"
+""")
 
-chmod +x distribute_council_alpha.sh
+import os
+os.system('chmod +x distribute_council_alpha.sh')
 
 # Create notification templates
-mkdir -p notifications
+import os
+os.system('mkdir -p notifications')
 for lang, template in [('ve', 'U wana R{amount} u bva kha Imperial Network'), 
                        ('ts', 'U kume R{amount} ku suka eka Imperial Network'),
                        ('en', 'You received R{amount} from Imperial Network')]:

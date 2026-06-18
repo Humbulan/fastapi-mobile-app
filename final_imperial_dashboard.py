@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🏛️ FINAL IMPERIAL DASHBOARD - COMPLETE SYSTEM STATUS
 """
@@ -13,7 +14,7 @@ print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 print()
 
 # Connect to Imperial DB
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # SECTION 1: USER STATS
@@ -62,7 +63,7 @@ except:
 # Try to read from migrated data
 vault_db = Path("migrated/data/vault.db")
 if vault_db.exists():
-    v_conn = sqlite3.connect(str(vault_db))
+    v_conn = get_db_connection()
     v_cursor = v_conn.cursor()
     v_cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     tables = v_cursor.fetchall()

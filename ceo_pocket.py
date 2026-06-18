@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 💰 CEO POCKET - Sovereign Salary Manager
 Tracks 2% management fee from IDC dividends and SADC syncs
@@ -10,7 +11,7 @@ import os
 print("💰 CEO POCKET - SOVEREIGN SALARY")
 print("="*60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # 1. Create CEO Pocket table if not exists

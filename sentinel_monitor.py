@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🛡️ IMPERIAL SENTINEL - Real-time Topic Cluster Monitor
 Alerts when SADC/Mobile balance shifts unexpectedly
@@ -21,7 +22,7 @@ class ImperialSentinel:
         
     def analyze_current(self):
         """Get current transaction distribution"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Count SADC vs Mobile payments

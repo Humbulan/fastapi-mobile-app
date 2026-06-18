@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 📋 IMPERIAL SOVEREIGN AUDIT - Complete System Report
 """
@@ -10,7 +11,7 @@ print("🏛️ IMPERIAL SOVEREIGN AUDIT")
 print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 print("="*70)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # 1. PORT STATUS

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 SADC Trade Intelligence Engine
 Fetches real-time commodity prices and updates Imperial valuation
@@ -94,7 +95,7 @@ class SADCTradeIntel:
         """Update wealth_tracking with new market data"""
         wealth = self.calculate_wealth_lock()
         
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute("""

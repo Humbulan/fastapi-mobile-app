@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🔄 SADC-TO-VILLAGE SYNC TRIGGER
 Updates village ranks when large SADC Logistics payments clear
@@ -10,7 +11,7 @@ from datetime import datetime
 print("🔄 SADC-TO-VILLAGE SYNC TRIGGER")
 print("="*60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # 1. Find recent SADC_A_LOGISTICS payments over R100k

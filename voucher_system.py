@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🎫 Imperial Voucher System - Pay-per-use AI Access
 Generate and manage R20 AI access codes
@@ -18,7 +19,7 @@ class VoucherSystem:
     
     def init_database(self):
         """Create voucher database if it doesn't exist"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('''
             CREATE TABLE IF NOT EXISTS vouchers (
@@ -74,7 +75,7 @@ class VoucherSystem:
             formatted = f"{code[:4]}-{code[4:]}"
             
             # Check if unique
-            conn = sqlite3.connect(self.db_path)
+            conn = get_db_connection()
             c = conn.cursor()
             c.execute("SELECT id FROM vouchers WHERE code=?", (formatted,))
             exists = c.fetchone()
@@ -89,7 +90,7 @@ class VoucherSystem:
         created = datetime.now()
         expires = created + timedelta(days=30)  # Valid for 30 days
         
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('''
             INSERT INTO vouchers (code, value, created_at, expires_at, max_uses, notes)
@@ -110,7 +111,7 @@ class VoucherSystem:
     
     def validate_voucher(self, code):
         """Check if a voucher is valid"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('''
             SELECT id, value, status, used_count, max_uses, expires_at 
@@ -147,7 +148,7 @@ class VoucherSystem:
         if not validation['valid']:
             return validation
         
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         
         # Update voucher
@@ -172,7 +173,7 @@ class VoucherSystem:
     
     def get_stats(self):
         """Get voucher statistics"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         
         c.execute("SELECT COUNT(*) FROM vouchers")
@@ -202,7 +203,7 @@ class VoucherSystem:
     
     def list_active(self):
         """List all active vouchers"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('''
             SELECT code, value, created_at, expires_at, used_count, max_uses
@@ -216,7 +217,7 @@ class VoucherSystem:
     
     def deactivate_voucher(self, code):
         """Deactivate a voucher"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute("UPDATE vouchers SET status='deactivated' WHERE code=?", (code,))
         conn.commit()

@@ -21,7 +21,8 @@ fi
 # 2. Node-RED (1880, 1883)
 if ! check_port 1880; then
     echo " 📡 Starting REAL Node-RED (1880)..."
-    nohup node-red -p 1880 > logs/node-red.log 2>&1 &
+    pkill -f node-red
+    nohup node-red -p 1880 -s ~/.node-red/settings.js > logs/node-red.log 2>&1 &
 fi
 if ! check_port 1883; then
     echo " 📡 Starting Node-RED Proxy (1883)..."
@@ -291,20 +292,15 @@ if command -v socat >/dev/null 2>&1; then
     nohup socat TCP-LISTEN:18800,fork,reuseaddr TCP:127.0.0.1:8118 > /dev/null 2>&1 &
     echo "✅ Imperial Architect Bridge Active [18800 -> 8118]"
 fi
-
-echo "Waiting for services to initialize..."
-sleep 5
-
-# Update database (if exists)
-if [ -f instance/imperial.db ]; then
     echo "Updating system sectors in database..."
     sqlite3 instance/imperial.db <<SQL
 UPDATE system_sectors SET status='online', last_seen=CURRENT_TIMESTAMP
-WHERE port IN (1880,1883,8000,8001,8080,8081,8082,8083,8085,8086,8087,8088,8090,8091,8092,8093,8121,8890,8094,8095,8096,8097,8098,8099,8100,8101,8102,8103,8104,8105,8106,8107,8108,8110,8111,8112,8113,8114,8115,8117,8191,8880,8888,8889,8119,9001,9002,9003,9090,11434,5000,5001);
+WHERE port IN (1880,1883,8000,8001,8080,8081,8082,8083,8085,8086,8087,8088,8090,8091,8092,8093,3306,8121,8890,8094,8095,8096,8097,8098,8099,8100,8101,8102,8103,8104,8105,8106,8107,8108,8110,8111,8112,8113,8114,8115,8117,8191,8880,8888,8889,8119,9001,9002,9003,9090,11434,5000,5001);
 SQL
     ONLINE=$(sqlite3 instance/imperial.db "SELECT COUNT(*) FROM system_sectors WHERE status='online';" 2>/dev/null || echo "0")
     TOTAL=$(sqlite3 instance/imperial.db "SELECT COUNT(*) FROM system_sectors;" 2>/dev/null || echo "0")
     echo "====================================="
+if [ -f instance/imperial.db ]; then
     echo "✅ IMPERIAL NETWORK: $ONLINE/$TOTAL PORTS ONLINE"
 else
     echo "⚠️ Database not found – skipping sector update"
@@ -322,3 +318,26 @@ echo " • Brain Command: http://localhost:8888"
 echo " • Stealth Node: http://localhost:9090"
 echo ""
 echo "👑 CEO: Humbulani Mudau"
+
+
+# MariaDB Imperial Nexus (3306)
+if ! check_port 3306; then
+    echo " 🗄️ Starting MariaDB Imperial Nexus (3306)..."
+    pkill -9 -f mariadbd 2>/dev/null
+    pkill -9 -f mysqld 2>/dev/null
+    rm -f /data/data/com.termux/files/home/mysql_run/mysql.sock
+    mkdir -p /data/data/com.termux/files/home/mysql_run
+    nohup mariadbd-safe --datadir=/data/data/com.termux/files/usr/var/lib/mysql --socket=/data/data/com.termux/files/home/mysql_run/mysql.sock --port=3306 --bind-address=127.0.0.1 > ~/imperial_network/logs/mariadb.log 2>&1 &
+    for i in {1..15}; do
+        if [ -S /data/data/com.termux/files/home/mysql_run/mysql.sock ]; then
+            echo " ✅ MariaDB Imperial Nexus Active [Port 3306]"
+            break
+        fi
+        sleep 1
+    done
+    if [ ! -S /data/data/com.termux/files/home/mysql_run/mysql.sock ]; then
+        echo " ❌ MariaDB failed to start. Check ~/imperial_network/logs/mariadb.log"
+    fi
+else
+    echo " ✅ MariaDB Imperial Nexus already running [Port 3306]"
+fi

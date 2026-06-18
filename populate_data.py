@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Populate database with sample data for Imperial Network 2.0
 """
@@ -11,7 +12,7 @@ DATABASE = os.path.join('instance', 'imperial.db')
 def populate():
     print("📊 Populating database with sample data...")
     
-    conn = sqlite3.connect(DATABASE)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Check if we already have data (using correct table name 'user')

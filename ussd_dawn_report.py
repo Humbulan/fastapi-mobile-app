@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 📱 USSD DAWN REPORT - Mobile Command Version
 """
@@ -9,7 +10,7 @@ print("Content-Type: text/plain\n")
 print("🏛️ IMPERIAL OMEGA")
 print("=" * 30)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 c = conn.cursor()
 
 # Port status

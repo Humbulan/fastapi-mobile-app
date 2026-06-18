@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Imperial Node-RED Dashboard - Port 1883
 Beautiful dashboard with navigation to real Node-RED on 1880
@@ -29,7 +30,7 @@ class NodeREDProxyHandler(BaseHTTPRequestHandler):
         
         # Get real data from database
         try:
-            conn = sqlite3.connect('instance/imperial.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             
             cursor.execute("SELECT COUNT(*) FROM system_sectors WHERE status='online'")

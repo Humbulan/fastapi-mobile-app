@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Language usage statistics for Imperial Network
 """
@@ -16,7 +17,7 @@ print("🏛️ IMPERIAL LANGUAGE STATISTICS")
 print("=" * 60)
 
 # Connect to DB to get user distribution
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Get users by village (to infer language preferences)

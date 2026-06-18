@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🏠 IMPERIAL FAMILY VAULT UPDATER
 Creates wife-accessible financial records in shared storage
@@ -12,7 +13,7 @@ print("🏠 IMPERIAL FAMILY VAULT UPDATER")
 print("="*60)
 
 # Connect to database
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Get current pocket status

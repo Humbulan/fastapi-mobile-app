@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Extract users from community_nexus.db and import to Imperial Network
 """
@@ -20,7 +21,7 @@ if not community_db.exists():
 print(f"✅ Found community database: {community_db}")
 
 # Connect to community database
-comm_conn = sqlite3.connect(str(community_db))
+comm_conn = get_db_connection()
 comm_cursor = comm_conn.cursor()
 
 # Check what tables exist
@@ -48,7 +49,7 @@ if ('users',) in tables:
     col_names = [col[1] for col in columns]
     
     # Connect to Imperial DB
-    imperial_conn = sqlite3.connect('instance/imperial.db')
+    imperial_conn = get_db_connection()
     imperial_cursor = imperial_conn.cursor()
     
     # Import users

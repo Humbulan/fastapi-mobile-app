@@ -1,12 +1,12 @@
 #!/bin/bash
 # IMPERIAL OMEGA LAUNCH - CEO ONLY
-# Version: 7.2 | 58/58 Ports
+# Version: 8.0 | 62/61 Ports with MariaDB Active
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; PURPLE='\033[0;35m'; CYAN='\033[0;36m'; NC='\033[0m'
 
 echo -e "${PURPLE}=============================================${NC}"
-echo -e "${PURPLE}🏛️ IMPERIAL OMEGA LAUNCH - 60 PORTS${NC}"
+echo -e "${PURPLE}🏛️ IMPERIAL OMEGA LAUNCH - 61 PORTS${NC}"
 echo -e "${PURPLE}=============================================${NC}"
 echo -e "${CYAN}CEO: Humbulani Mudau | Date: $(date)${NC}"
 
@@ -68,13 +68,13 @@ pgrep -f cloudflared > /dev/null && echo -e "${GREEN}✅ Cloudflare tunnel runni
 
 echo -e "\n${YELLOW}🔍 Verifying 60 ports...${NC}"
 ONLINE=0
-for port in 1880 1883 8000 8001 8080 8081 8082 8083 8085 8086 8087 8088 8090 8091 8092 8093 8094 8095 8096 8097 8098 8099 8100 8101 8102 8103 8104 8105 8106 8107 8108 8110 8111 8112 8113 8114 8115 8117 8118 8121 8122 8191 8880 8888 8889 8890 8119 9001 9002 9003 9090 11434 12345 18789 8002 8005 5001 5002 5003 8885; do
+for port in 1880 1883 8000 8001 8080 8081 8082 8083 8085 8086 8087 8088 8090 8091 8092 8093 8094 8095 8096 8097 8098 8099 8100 8101 8102 8103 8104 8105 8106 8107 8108 8110 8111 8112 8113 8114 8115 8117 8118 8121 8122 8191 8880 8888 8889 8890 8119 9001 9002 9003 9090 11434 12345 18789 8002 8005 5001 5002 5003 8885 65412 3306; do
     if (timeout 0.2 bash -c "echo > /dev/tcp/localhost/$port") 2>/dev/null; then
         ((ONLINE++))
     fi
 done
 echo -e "\n${PURPLE}=============================================${NC}"
-echo -e "${GREEN}✅ $ONLINE / 59 ports online${NC}"
+echo -e "${GREEN}✅ $ONLINE / 61 ports online${NC}"
 
 echo -e "\n${YELLOW}📊 Sentinel Dashboard${NC}"
 cat > ~/imperial_network/sentinel_auth.py << 'PY'
@@ -98,9 +98,7 @@ print(f"👑 CEO: {user}")
 PY
 python3 ~/imperial_network/sentinel_auth.py
 
-
 # -------------------------------------------------------
-
 # 🚀 Starting Health Webhook Server...
 if ! pgrep -f 'health_webhook.py' > /dev/null; then
     echo '⚡ Launching Health Webhook Monitor [Port 8119]...'
@@ -109,29 +107,80 @@ if ! pgrep -f 'health_webhook.py' > /dev/null; then
 fi
 
 # 🚇 Starting Imperial MCP Nexus Server (Port 8002)
-# -------------------------------------------------------
 echo "⚡ Starting Imperial MCP Nexus Server..."
-
-# 1. Clear any rogue processes occupying port 8002
 PID_8002=$(lsof -t -i:8002)
 if [ ! -z "$PID_8002" ]; then
     echo "🧹 Port 8002 busy (PID: $PID_8002). Cleaning up..."
     kill -9 $PID_8002 2>/dev/null
 fi
-
-# 2. Clear any lingering files from previous manual tests
 rm -f ~/imperial_network/sse_stream.log
-
-# 3. Dispatch the server seamlessly into the background
 cd ~/imperial_network
 NODE_OPTIONS="" nohup node server.mjs > mcp_output.log 2>&1 &
-
 echo "✅ Imperial MCP Nexus Server Active [Port 8002]"
+
+# 🚀 Starting DSVW Security Lab (Termux)
+if [ -d ~/DSVW ]; then
+    cd ~/DSVW && python3 dsvw.py > /dev/null 2>&1 &
+    echo "✅ DSVW portal online [65412]"
+else
+    echo "⚠️ DSVW not installed, skipping"
+fi
+
+
+# 🚀 Starting Metrics API (port 5006)
+if ! (timeout 0.5 bash -c "echo > /dev/tcp/localhost/5006") 2>/dev/null; then
+    echo "⚡ Starting Metrics API (port 5006)..."
+    cd ~/imperial_network && nohup python3 metrics_api.py > metrics_api.log 2>&1 &
+    sleep 1
+fi
+if (timeout 0.5 bash -c "echo > /dev/tcp/localhost/5006") 2>/dev/null; then
+    echo "✅ Metrics API active on port 5006"
+else
+    echo "❌ Metrics API failed to start"
+fi
+
+# 🚀 Starting Metrics Dashboard (port 5007)
+if ! (timeout 0.5 bash -c "echo > /dev/tcp/localhost/5007") 2>/dev/null; then
+    echo "⚡ Starting Metrics Dashboard (port 5007)..."
+    cd ~/imperial_network && nohup python3 metrics_dashboard.py > metrics_dashboard.log 2>&1 &
+    sleep 1
+fi
+if (timeout 0.5 bash -c "echo > /dev/tcp/localhost/5007") 2>/dev/null; then
+    echo "✅ Metrics Dashboard active on port 5007"
+else
+    echo "❌ Metrics Dashboard failed to start"
+fi
 
 echo -e "\n${GREEN}✅ Omega launch complete.${NC}"
 
+# 🚀 Starting MariaDB Imperial Nexus (NOW WORKING)
+echo "⚡ Starting MariaDB Imperial Nexus (3306)..."
+mkdir -p $HOME/mysql_run
+pkill -9 -f mariadbd 2>/dev/null
+rm -f $HOME/mysql_run/mysql.sock
+nohup mariadbd-safe --datadir=$PREFIX/var/lib/mysql --socket=$HOME/mysql_run/mysql.sock --port=3306 --bind-address=127.0.0.1 > $HOME/mariadb.log 2>&1 &
+sleep 3
+if mysqladmin -u root --socket=$HOME/mysql_run/mysql.sock ping >/dev/null 2>&1; then
+    echo "✅ MariaDB Imperial Nexus Active [Port 3306]"
+else
+    echo "❌ MariaDB failed to initialize. Check ~/mariadb.log"
+fi
+
+# 🚀 Starting Imperial Trade Sentinel [Port 8105]
+echo "⚡ Preparing Imperial Trade Sentinel [Port 8105]..."
+PID_8105=$(lsof -t -i:8105)
+if [ ! -z "$PID_8105" ]; then
+    kill -9 $PID_8105 2>/dev/null
+fi
+cd ~/imperial_network
+nohup gunicorn --workers=2 --bind=127.0.0.1:8105 sentinel_8105:app > ~/imperial_network/logs/sentinel.log 2>&1 &
+echo "✅ Imperial Trade Sentinel Active [Port 8105]"
+
+# 🚀 Launching Imperial V2 Dashboard [Port 8005]
+nohup gunicorn --workers=2 --bind=0.0.0.0:8005 app:app > ~/v2_dashboard.log 2>&1 &
+echo "✅ Imperial V2 Dashboard Active [Port 8005]"
+
 # 🚀 Starting Native Cloud Workspace (Port 8885)
-# -------------------------------------------------------
 echo -e "\n${YELLOW}🚀 Starting Native Code Server Workspace...${NC}"
 if ! (timeout 0.5 bash -c "echo > /dev/tcp/localhost/8885") 2>/dev/null; then
     nohup code-server --auth none --bind-addr 127.0.0.1:8885 > ~/code_server.log 2>&1 &

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🏛️ SADC HYPER-DRIVE STRESS TEST
 Simulates 275 concurrent users trading in the SADC corridor
@@ -26,7 +27,7 @@ def simulate_trade(user_id):
     conn = None
     start_time = time.time()
     try:
-        conn = sqlite3.connect(DB_PATH, timeout=5.0)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Generate random remittance amount
@@ -93,7 +94,7 @@ print(f'   Total Trade Value: R{total_value:,.2f}')
 print(f'   Test Duration: {total_time:.2f} seconds')
 
 # Check WAL mode status
-conn = sqlite3.connect(DB_PATH)
+conn = get_db_connection()
 cursor = conn.cursor()
 cursor.execute('PRAGMA journal_mode')
 wal_mode = cursor.fetchone()[0]

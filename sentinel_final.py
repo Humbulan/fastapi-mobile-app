@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 👑 IMPERIAL SOVEREIGN SENTINEL - FINAL VERSION
 """
@@ -27,7 +28,7 @@ print(f"👑 Identity: {user}")
 print(f"🔑 Key: {key[:8]}... (secured)")
 
 # Connect to database
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 c = conn.cursor()
 
 # Get SADC pending

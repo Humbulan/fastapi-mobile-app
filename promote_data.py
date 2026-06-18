@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 IMPERIAL DATA PROMOTION SCRIPT
 Moves data from nexus_backup tables to production tables
@@ -11,7 +12,7 @@ import hashlib
 import random
 
 def connect_db():
-    return sqlite3.connect('instance/imperial.db')
+    return get_db_connection()
 
 def promote_users():
     print("\n👥 Promoting users to production...")

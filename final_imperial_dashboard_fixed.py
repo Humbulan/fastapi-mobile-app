@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🏛️ FINAL IMPERIAL DASHBOARD - COMPLETE SYSTEM STATUS
 """
@@ -13,7 +14,7 @@ print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 print()
 
 # Connect to Imperial DB
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # SECTION 1: USER STATS

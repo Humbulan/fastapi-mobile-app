@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Sovereign Identity Card - Humbulani Mudau
 """
 import sqlite3
 from datetime import datetime
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 print("🏛️ SOVEREIGN IMPERIAL IDENTITY CARD")

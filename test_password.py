@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 import hashlib
 import sqlite3
 
@@ -12,7 +13,7 @@ hashed = hash_password(test_password)
 print(f"Password '{test_password}' hashes to: {hashed}")
 
 # Check database
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 cursor.execute("SELECT email, password FROM user")
 for email, password in cursor.fetchall():

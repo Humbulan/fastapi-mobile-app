@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Imperial VAS Bridge - Converts vouchers to real airtime
 Connects Voucher API (8098) to Nedbank/Prepaid24 VAS providers
@@ -48,7 +49,7 @@ class VASProvider:
         logging.info(f"PURCHASE: R{ceo_cut_2_percent} airtime to {phone_number} (Ref: {reference})")
         
         # Deduct from CEO_POCKET (R879k available)
-        conn = sqlite3.connect('instance/imperial.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE ceo_pocket SET ceo_cut_2_percent = ceo_cut_2_percent - ? WHERE id=2 AND status='available'", (ceo_cut_2_percent,))
         conn.commit()

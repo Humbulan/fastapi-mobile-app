@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 IMPERIAL HEIST - Migrate all valuable assets from old project
 """
@@ -169,7 +170,7 @@ for file, subdir in db_files:
         # Export schema and data from SQLite
         if file.endswith('.db'):
             try:
-                conn = sqlite3.connect(str(src))
+                conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
                 tables = cursor.fetchall()

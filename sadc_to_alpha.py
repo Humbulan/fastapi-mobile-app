@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 SADC Trade Intelligence → Alpha Pipeline Bridge
 Extracts trade data and injects into nexus_backup for Alpha boosting
@@ -86,7 +87,7 @@ def calculate_trade_flows(sadc_data):
 
 def inject_to_nexus(trades):
     """Insert trade-derived transactions into nexus_backup"""
-    conn = sqlite3.connect('instance/imperial.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Get a user (use first user)

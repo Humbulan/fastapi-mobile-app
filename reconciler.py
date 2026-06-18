@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 import sqlite3
 
 def reconcile():
     db_path = "/data/data/com.termux/files/home/imperial_network/instance/imperial.db"
-    conn = sqlite3.connect(db_path)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute("SELECT id, payment_method FROM payment WHERE status='pending';")

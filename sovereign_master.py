@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Sovereign Master Controller
 Manages all 35 imperial sectors and maintains the truth
@@ -16,7 +17,7 @@ class SovereignMaster:
         self.active_sectors = {}
         
     def get_sectors(self):
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT port, service_name FROM system_sectors ORDER BY port")
         sectors = cursor.fetchall()
@@ -86,7 +87,7 @@ class SovereignMaster:
         return online
     
     def update_status(self, port, status):
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             "UPDATE system_sectors SET status=?, last_seen=? WHERE port=?",
@@ -97,7 +98,7 @@ class SovereignMaster:
     
     def update_wealth_tracking(self, online_count):
         """Update wealth based on online sectors"""
-        conn = sqlite3.connect(self.db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Base value per sector

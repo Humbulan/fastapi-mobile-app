@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Dashboard UI - Port 8092
 Proper routing for all endpoints
@@ -20,7 +21,7 @@ class DashboardUIHandler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             try:
-                conn = sqlite3.connect('/data/data/com.termux/files/home/imperial_network/instance/imperial.db', timeout=10)
+                conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute("SELECT COUNT(DISTINCT village) FROM users WHERE village IS NOT NULL AND village != ''")
                 villages = cursor.fetchone()[0] or 40

@@ -5,7 +5,7 @@ from datetime import datetime
 app = FastAPI(title="Imperial AI Proxy", version="2.0.0")
 
 AI_AGENT_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "qwen2.5:0.5b"
+MODEL_NAME = "my-model"
 
 async def fetch_imperial_truth():
     return {

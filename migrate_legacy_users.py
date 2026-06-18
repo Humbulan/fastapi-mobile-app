@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Migrate legacy users to Imperial Network schema
 Schema: id, username, email, password, role, phone, village, created_at
@@ -42,7 +43,7 @@ if not vault_file:
 print(f"\n📖 Reading from: {vault_file}")
 
 # Connect to Imperial DB
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Read CSV and prepare users

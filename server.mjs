@@ -37,7 +37,10 @@ app.post('/messages', async (req, res) => {
   let result = null;
 
   try {
-    if (method === 'tools/list') {
+    if (method === 'initialize') {
+      result = { protocolVersion: "2024-11-05", capabilities: {} };
+      // Send a successful response; no need to write to SSE
+    } else if (method === 'tools/list') {
       result = {
         tools: [
           {
@@ -49,36 +52,21 @@ app.post('/messages', async (req, res) => {
             name: 'run-diagnostics',
             inputSchema: { type: 'object', properties: {} },
             execution: { taskSupport: 'forbidden' }
-          },
-          {
-            name: 'claude_agent',
-            description: 'Run the Python Claude‑like agent (read/write/bash/math)',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                prompt: { type: 'string', description: 'The task or question' }
-              },
-              required: ['prompt']
-            },
-            execution: { taskSupport: 'forbidden' }
           }
         ]
       };
     } else if (method === 'tools/call') {
       const { name, arguments: args } = params;
       if (name === 'get-system-status') {
-        result = { status: 'operational', timestamp: new Date().toISOString() };
+        try {
+          const { stdout } = await execAsync('python3 ~/imperial_network/get_imperial_metrics.py');
+          const data = JSON.parse(stdout);
+          result = { status: 'operational', ...data, timestamp: new Date().toISOString() };
+        } catch (err) {
+          result = { status: 'error', error: err.message, timestamp: new Date().toISOString() };
+        }
       } else if (name === 'run-diagnostics') {
         result = { diagnostics: 'All systems nominal', timestamp: new Date().toISOString() };
-      } else if (name === 'claude_agent') {
-        const prompt = args.prompt;
-        const cmd = `~/Build-your-own-Claude-Code/your_program.sh -p "${prompt.replace(/"/g, '\\"')}"`;
-        try {
-          const { stdout, stderr } = await execAsync(cmd);
-          result = { output: stdout || stderr || 'No output' };
-        } catch (err) {
-          result = { error: err.message, output: err.stdout || err.stderr };
-        }
       } else {
         throw new Error(`Unknown tool: ${name}`);
       }

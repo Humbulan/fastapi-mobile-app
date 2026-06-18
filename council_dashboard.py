@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Council PIN Dashboard - Imperial Network
 """
@@ -10,7 +11,7 @@ print("=" * 60)
 print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 print()
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Basic stats

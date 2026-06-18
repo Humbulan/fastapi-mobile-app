@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Manual user entry from broadcast output
 """
@@ -25,7 +26,7 @@ users = [
 print("🏛️ MANUAL USER RESTORATION")
 print("=" * 60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 restored = 0

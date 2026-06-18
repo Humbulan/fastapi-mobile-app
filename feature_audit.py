@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🏛️ IMPERIAL FEATURE AUDIT - Check what's implemented vs what's missing
 """
@@ -88,7 +89,7 @@ features = {
 }
 
 # Connect to DB to check roles
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 print("\n📋 FEATURE AUDIT RESULTS:")

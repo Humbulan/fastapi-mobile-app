@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Gemini AI Council Distribution Optimizer
 Analyzes village patterns and suggests optimal payout strategies
@@ -12,7 +13,7 @@ print("🏛️ GEMINI COUNCIL DISTRIBUTION OPTIMIZER")
 print("=" * 60)
 
 # Connect to databases
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Get council data with village mapping

@@ -31,11 +31,10 @@ def home():
 def monitor_loop():
     while True:
         DATA['last_check'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # Logic for checking Gold/Grid goes here
         time.sleep(60)
 
+# Always boot the background monitoring thread regardless of how Python is invoked
+threading.Thread(target=monitor_loop, daemon=True).start()
+
 if __name__ == "__main__":
-    # Start the logic in a background thread
-    threading.Thread(target=monitor_loop, daemon=True).start()
-    # Start the web server on 8105
     app.run(port=8105, host='0.0.0.0')

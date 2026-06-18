@@ -1,10 +1,11 @@
+from db_config import get_db_connection
 import sqlite3
 import os
 from datetime import datetime
 
 def connect_db(path):
     try:
-        conn = sqlite3.connect(path)
+        conn = get_db_connection()
         conn.row_factory = sqlite3.Row
         return conn
     except:

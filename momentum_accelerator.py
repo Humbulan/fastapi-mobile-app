@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 import sqlite3
 from datetime import datetime
 
@@ -6,7 +7,7 @@ from datetime import datetime
 TARGET_GRID = 600000.00
 DEADLINE = "2026-06-16" # Youth Day Milestone
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Get Current Status

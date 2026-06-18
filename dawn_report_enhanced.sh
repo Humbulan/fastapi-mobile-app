@@ -2,11 +2,11 @@
 get_sadc_volume() {
     curl -s http://localhost:5003/sadc/stats | python3 -c "import sys, json; print(json.load(sys.stdin).get("total_volume", 0))" 2>/dev/null || echo "0"
 }
-TOTAL_PORTS=60
+TOTAL_PORTS=64
 
 # --- CONFIGURATION ---
 ONLINE_COUNT=0
-TOTAL_PORTS=60
+TOTAL_PORTS=64
 FAILED_PORTS=""
 
 # Mapping Port Names from the Original Documentary
@@ -45,11 +45,17 @@ get_name() {
         5001) echo "Sovereign_Monitor" ;;
         5002) echo "MoMo_Stats_Server" ;;
         5003) echo "SADC_Payment_Gateway" ;; 8119) echo "Health_Webhook" ;;
+        5006) echo "Metrics_API" ;;
+        5007) echo "Metrics_Dashboard" ;;
         5003) echo "SADC_Payment_Gateway" ;; 8121) echo "Kimi_AI_Bridge" ;;
+        5006) echo "Metrics_API" ;;
+        5007) echo "Metrics_Dashboard" ;;
         8890) echo "Jupyter_Lab_Core" ;;
         8885) echo "VS_Code_Server" ;;
         8122) echo "Vision_Core" ;;
         18800) echo "Imperial_AI_Architect" ;;
+        65412) echo "DSVW_Security_Lab" ;;
+        3306) echo "Imperial_Nexus_DB" ;;
     esac
 }
 
@@ -59,7 +65,7 @@ echo "🌅 DAWN REPORT [IMPERIAL OMEGA] - $(date)"
 echo "-------------------------------------------------------"
 
 # THE SCANNING ENGINE
-for port in 18800 12345 8002 18789 1880 1883 8001 8005 8080 8081 8082 8083 8085 8086 8087 8088 8090 8091 8092 8093 8094 8095 8096 8097 8098 8099 8100 8101 8102 8103 8104 8105 8106 8107 8108 8110 8111 8112 8113 8114 8115 8117 8118 8191 8880 8888 8889 9001 9002 9003 9090 11434 5001 5002 5003 8119 8121 8890 8122 8885; do
+for port in 18800 12345 8002 3306 18789 1880 1883 8001 8005 8080 8081 8082 8083 8085 8086 8087 8088 8090 8091 8092 8093 8094 8095 8096 8097 8098 8099 8100 8101 8102 8103 8104 8105 8106 8107 8108 8110 8111 8112 8113 8114 8115 8117 8118 8191 8880 8888 8889 9001 9002 9003 9090 11434 5001 5002 5003 5006 5007 8119 8121 8890 8122 8885 65412; do
     NAME=$(get_name $port)
     if (timeout 0.1 bash -c "echo > /dev/tcp/localhost/$port") >/dev/null 2>&1 ; then
         echo "🟢 ONLINE  | Port $port: $NAME"

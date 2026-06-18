@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 📥 REIMPORT MISSING IDC DIVIDENDS
 Recreates the dividend reinvestment pattern from recovered logs
@@ -10,7 +11,7 @@ from datetime import datetime, timedelta
 print("📥 REIMPORTING IDC DIVIDEND PATTERN...")
 print("="*60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Pattern from logs: dividends every 10 seconds, ranging R50k-R150k

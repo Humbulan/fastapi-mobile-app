@@ -1,3 +1,4 @@
+from db_config import get_db_connection
 import sqlite3
 import os
 from datetime import datetime, timedelta
@@ -6,7 +7,7 @@ import random
 # 1. DATABASE SETUP
 db_path = 'instance/imperial.db'
 os.makedirs('instance', exist_ok=True)
-conn = sqlite3.connect(db_path)
+conn = get_db_connection()
 cursor = conn.cursor()
 cursor.row_factory = sqlite3.Row
 

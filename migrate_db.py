@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 Database migration script for Imperial Network 2.0
 Adds villages, api_keys, and api_usage_logs tables
@@ -12,7 +13,7 @@ DATABASE = os.path.join('instance', 'imperial.db')
 def run_migration():
     print("🚀 Starting database migration...")
     
-    conn = sqlite3.connect(DATABASE)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Create villages table

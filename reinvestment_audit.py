@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🔍 IMPERIAL REINVESTMENT AUDIT
 Tracking IDC Dividends across SADC corridors and Web Upgrade
@@ -9,7 +10,7 @@ from datetime import datetime
 print("🔍 AUDITING REINVESTMENT BUCKETS...")
 print("="*60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Search for IMPERIAL_WEB_UPGRADE entries

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 📡 NETWORK REVIVAL BROADCAST - Wake Up 100 Inactive Users
 Uses Ukuvuselela Webhook (Port 8117)
@@ -11,7 +12,7 @@ from datetime import datetime
 print("📡 IMPERIAL NETWORK REVIVAL")
 print("="*60)
 
-conn = sqlite3.connect('instance/imperial.db')
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Find 100 inactive users (users with no recent activity)

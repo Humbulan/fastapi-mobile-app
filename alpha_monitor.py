@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import sqlite3
 import json
@@ -6,7 +7,7 @@ from datetime import datetime, timedelta
 
 class AlphaHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        conn = sqlite3.connect('instance/imperial.db')
+        conn = get_db_connection()
         c = conn.cursor()
         
         # Get overall stats

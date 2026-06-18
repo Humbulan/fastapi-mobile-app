@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 """
 🔔 IMPERIAL MILESTONE ALERT - Family Dividend Tracker
 Monitors Sovereign Pocket growth and logs R10k milestones
@@ -11,7 +12,7 @@ def check_milestone():
     print("🔔 IMPERIAL MILESTONE ALERT")
     print("="*60)
     
-    conn = sqlite3.connect('instance/imperial.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Check current available CEO funds

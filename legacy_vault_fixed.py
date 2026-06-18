@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from db_config import get_db_connection
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import sqlite3
@@ -13,7 +14,7 @@ class VaultHandler(BaseHTTPRequestHandler):
         
         try:
             # Get vault data
-            conn = sqlite3.connect('instance/imperial.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             
             # Get settlement batches
