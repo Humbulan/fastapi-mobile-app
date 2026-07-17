@@ -89,7 +89,7 @@ print("\n🗄️ BACKUP STATUS")
 print("-" * 40)
 backup_dir = Path.home() / "imperial_vault/archives"
 if backup_dir.exists():
-    backups = list(backup_dir.glob("*.tar.gz"))
+    backups = [f for f in backup_dir.glob("*.tar.gz") if os.path.exists(f"{f}.sha256")]
     print(f"  Eternal Backups: {len(backups)}")
     if backups:
         latest = max(backups, key=lambda p: p.stat().st_mtime)

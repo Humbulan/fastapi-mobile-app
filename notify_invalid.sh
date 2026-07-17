@@ -1,0 +1,1 @@
+../.picoclaw/workspace/notify_invalid.sh

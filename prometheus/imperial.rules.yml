@@ -1,0 +1,27 @@
+groups:
+  - name: imperial_stack_metrics
+    interval: 1m
+    rules:
+      - record: job:active_ports:count
+        expr: count(up == 1)
+      - record: job:sadc_payment_gateway:success_rate
+        expr: |
+          sum(rate(sadc_payment_gateway_requests_total{status="success"}[5m]))
+          /
+          sum(rate(sadc_payment_gateway_requests_total[5m]))
+      - alert: ImperialInfrastructureDegraded
+        expr: count(up == 0) > 3
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Imperial Infrastructure degradation detected"
+          description: "More than 3 ports are currently offline (Current: {{ $value }})."
+      - alert: CloudflareFreeTierRestriction
+        expr: cloudflare_zones_skipped_free_tier > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cloudflare Analytics Restricted"
+          description: "Zone analytics unavailable due to Free Tier plan."

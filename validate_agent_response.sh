@@ -1,0 +1,1 @@
+../.picoclaw/workspace/validate_agent_response.sh

@@ -1,0 +1,1 @@
+../.picoclaw/workspace/guardian.sh

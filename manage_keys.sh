@@ -1,0 +1,1 @@
+../.picoclaw/workspace/manage_keys.sh

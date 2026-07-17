@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException
 import httpx
 from datetime import datetime
@@ -5,7 +6,7 @@ from datetime import datetime
 app = FastAPI(title="Imperial AI Proxy", version="2.0.0")
 
 AI_AGENT_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "my-model"
+MODEL_NAME = os.getenv("MODEL_NAME", "imperial-qwen")
 
 async def fetch_imperial_truth():
     return {
@@ -42,7 +43,7 @@ async def ai_proxy(payload: dict):
     prompt = payload.get("prompt", "")
     if not prompt:
         raise HTTPException(status_code=400, detail="Missing 'prompt' field")
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=300.0) as client:
         resp = await client.post(
             AI_AGENT_URL,
             json={"model": MODEL_NAME, "prompt": prompt, "stream": False}
@@ -57,7 +58,7 @@ async def imperial_ai_chat(user_message: str):
     truth = await fetch_imperial_truth()
     context = f"Villages: {truth['villages']}/{truth['target']}, Valuation: R{truth['valuation']:,.2f}"
     prompt = f"{context}\n\nUser: {user_message}\nAssistant:"
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=300.0) as client:
         resp = await client.post(
             AI_AGENT_URL,
             json={"model": MODEL_NAME, "prompt": prompt, "stream": False}
@@ -69,7 +70,7 @@ async def imperial_ai_chat(user_message: str):
 
 @app.post("/ai/business-chat")
 async def ai_business_chat(user_message: str):
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=300.0) as client:
         resp = await client.post(
             AI_AGENT_URL,
             json={"model": MODEL_NAME, "prompt": user_message, "stream": False}
@@ -78,6 +79,26 @@ async def ai_business_chat(user_message: str):
             return {"response": "AI service temporarily unavailable", "error": resp.text, "timestamp": datetime.utcnow().isoformat()}
         result = resp.json()
         return {"response": result.get("response", ""), "model": MODEL_NAME, "timestamp": datetime.utcnow().isoformat()}
+
+@app.post("/ai/imperial-chat-enhanced")
+async def imperial_ai_chat_enhanced(user_message: str):
+    truth = await fetch_imperial_truth()
+    context = f"CURRENT_OPERATIONAL_DATA: Villages: {truth['villages']}/{truth['target']}, Valuation: R{truth['valuation']:,.2f}"
+    system_instruction = (
+        "You are the Imperial AI Nexus. You are the Lead Cyber Security Architect and CEO of Humbu Wandeme Trading Enterprise. "
+        "You must strictly output responses in raw JSON format without any markdown. Your focus is on the Imperial Network Stack, "
+        "SADC logistics, and enterprise valuations. Additionally, always include a brief risk assessment for any suggested action."
+    )
+    combined_prompt = f"{system_instruction}\n\n{context}\n\nUser: {user_message}\nAssistant:"
+    async with httpx.AsyncClient(timeout=300.0) as client:
+        resp = await client.post(
+            AI_AGENT_URL,
+            json={"model": MODEL_NAME, "prompt": combined_prompt, "stream": False}
+        )
+        if resp.status_code != 200:
+            return {"enhanced_response": "AI service unavailable", "error": resp.text, "timestamp": datetime.utcnow().isoformat()}
+        result = resp.json()
+        return {"enhanced_response": result.get("response", ""), "timestamp": datetime.utcnow().isoformat()}
 
 if __name__ == "__main__":
     import uvicorn

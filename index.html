@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><title>Imperial CTF Training</title></head>
+<body>
+<h1>🛡️ Imperial Cyber Range</h1>
+<div id="challenges"></div>
+<div>
+    <input id="user" placeholder="Your name" />
+    <input id="answer" placeholder="Your attack payload" />
+    <button onclick="submitChallenge()">Submit</button>
+</div>
+<div id="result"></div>
+<script>
+let challenges = [];
+let selected = 0;
+
+fetch('http://localhost:8089/challenges')
+  .then(r => r.json())
+  .then(data => {
+    challenges = data;
+    document.getElementById('challenges').innerHTML = challenges.map((c,i) =>
+      `<div><b>${c.name}</b> <button onclick="select(${i})">Select</button></div>`
+    ).join('');
+  });
+
+function select(idx) { selected = idx; }
+
+function submitChallenge() {
+  const user = document.getElementById('user').value || 'anonymous';
+  const answer = document.getElementById('answer').value;
+  fetch('http://localhost:8089/submit', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({challenge_id: challenges[selected].id, answer, user})
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('result').innerHTML = data.message + ' (Score: ' + data.score + ')';
+  });
+}
+</script>
+</body>
+</html>

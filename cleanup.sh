@@ -1,0 +1,1 @@
+../.picoclaw/workspace/cleanup.sh

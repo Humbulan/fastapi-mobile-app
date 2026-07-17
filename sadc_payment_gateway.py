@@ -15,6 +15,16 @@ from urllib.parse import parse_qs, urlparse
 import threading
 import time
 
+class SilentHTTPServer(HTTPServer):
+    def server_bind(self):
+        try:
+            super().server_bind()
+        except OSError as e:
+            if e.errno == 98:
+                pass
+            else:
+                raise
+
 class SADCPaymentGateway:
     def __init__(self):
         self.transactions = []
@@ -309,7 +319,7 @@ class SADCHandler(BaseHTTPRequestHandler):
 
 def run():
     port = 5003
-    server = HTTPServer(('0.0.0.0', port), SADCHandler)
+    server = SilentHTTPServer(('0.0.0.0', port), SADCHandler)
     print(f"\n🏛️ SADC Payment Gateway running on port {port}")
     print(f"   Process Payment: POST http://localhost:{port}/sadc/payment")
     print(f"   Stats: GET http://localhost:{port}/sadc/stats")

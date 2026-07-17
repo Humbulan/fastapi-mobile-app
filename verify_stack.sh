@@ -1,0 +1,1 @@
+../.picoclaw/workspace/verify_stack.sh

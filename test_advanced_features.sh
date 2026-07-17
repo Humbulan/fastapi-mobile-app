@@ -1,0 +1,1 @@
+../.picoclaw/workspace/test_advanced_features.sh

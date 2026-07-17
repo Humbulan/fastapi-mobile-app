@@ -9,8 +9,30 @@ import io
 import random
 
 app = Flask(__name__)
+
+@app.route('/api/health')
+def health_check(): return {"status": "online", "uptime": "99.9%"}
+
+@app.route('/api/version')
+def version_check(): return {"version": "2.0.4-Imperial"}
+
+@app.route('/api/system/status')
+def system_status(): return {"cpu": "12%", "memory": "45%", "status": "stable"}
+
+@app.route('/api/business/data')
+def business_data(): return {"revenue": 94000000, "currency": "ZAR"}
+
+@app.route('/create_payment')
+def cp_route(): return render_template('create_payment.html', user=type('User', (), {'username': 'Humbulani'}))
+
+@app.route('/create_order')
+def co_route(): return render_template('create_order.html', user=type('User', (), {'username': 'Humbulani'}))
+
+@app.route('/notification-settings')
+def ns_route(): return render_template('notification_settings.html', user=type('User', (), {'username': 'Humbulani'}))
+
 app.config['SECRET_KEY'] = 'imperial_secret_123'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///imperial.db'
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:RootStrongPass123!@localhost/imperial_nexus?unix_socket=/data/data/com.termux/files/home/mysql_run/mysql.sock"
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'

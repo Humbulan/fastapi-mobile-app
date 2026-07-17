@@ -1,0 +1,1 @@
+../.picoclaw/workspace/send_whatsapp.sh

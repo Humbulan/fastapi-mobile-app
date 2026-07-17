@@ -117,7 +117,7 @@ for feature, details in features.items():
     if feature == "Backup & Recovery":
         backup_dir = Path.home() / "imperial_vault/archives"
         if backup_dir.exists():
-            backups = list(backup_dir.glob("*.tar.gz"))
+            backups = [f for f in backup_dir.glob("*.tar.gz") if os.path.exists(f"{f}.sha256")]
             print(f"  Backups found: {len(backups)}")
     
     if feature == "Multi-language Support":

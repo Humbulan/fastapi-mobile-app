@@ -1,15 +1,14 @@
 #!/data/data/com.termux/files/usr/bin/bash
+
+# ===== PRE‑FLIGHT OPTIMIZATION =====
+~/imperial_network/imperial_optimize.sh latency
+~/imperial_network/imperial_optimize.sh health
+
+# ===== HELPERS =====
 get_sadc_volume() {
-    curl -s http://localhost:5003/sadc/stats | python3 -c "import sys, json; print(json.load(sys.stdin).get("total_volume", 0))" 2>/dev/null || echo "0"
+    curl -s http://localhost:5003/sadc/stats | python3 -c "import sys, json; print(json.load(sys.stdin).get('total_volume', 0))" 2>/dev/null || echo "0"
 }
-TOTAL_PORTS=64
 
-# --- CONFIGURATION ---
-ONLINE_COUNT=0
-TOTAL_PORTS=64
-FAILED_PORTS=""
-
-# Mapping Port Names from the Original Documentary
 get_name() {
     case $1 in
         1880) echo "Node-RED" ;; 1883) echo "Node-RED_Proxy" ;;
@@ -29,12 +28,13 @@ get_name() {
         8102) echo "Urban_Gateway" ;; 8103) echo "Intel_Alpha" ;;
         8104) echo "Surge_Monitor" ;; 8105) echo "Sentinel" ;;
         8106) echo "IMPERIAL_WEB_UPGRADE" ;; 8107) echo "SADC_A_LOGISTICS" ;;
-        8108) echo "SADC_B_RETAIL" ;; 8110) echo "Thohoyandou" ;;
+        8108) echo "SADC_B_RETAIL" ;; 8110) echo "Node-RED_Exporter" ;;
         8111) echo "Malamulele_Relay" ;; 8112) echo "SADC_Sync" ;;
         8113) echo "Vault_2" ;; 8114) echo "B2B_Bulk" ;;
         8115) echo "Ghost" ;; 8117) echo "Ukuvuselela_Webhook" ;;
         8118) echo "AI_Proxy_Gateway" ;;
         8119) echo "Health_Webhook" ;;
+        8120) echo "Universal_Proxy" ;;
         8191) echo "Intel_Files" ;; 8880) echo "ha_tunnel" ;;
         8888) echo "System_Node" ;; 8889) echo "PDC_Core" ;;
         9000) echo "Nextcloud_Core" ;; 9001) echo "Thohoyandou Survey" ;;
@@ -44,30 +44,49 @@ get_name() {
         18789) echo "Clawdbot" ;;
         5001) echo "Sovereign_Monitor" ;;
         5002) echo "MoMo_Stats_Server" ;;
-        5003) echo "SADC_Payment_Gateway" ;; 8119) echo "Health_Webhook" ;;
+        5003) echo "SADC_Payment_Gateway" ;;
         5006) echo "Metrics_API" ;;
         5007) echo "Metrics_Dashboard" ;;
-        5003) echo "SADC_Payment_Gateway" ;; 8121) echo "Kimi_AI_Bridge" ;;
-        5006) echo "Metrics_API" ;;
-        5007) echo "Metrics_Dashboard" ;;
+        5008) echo "SADC_Logging_API" ;;
+        8121) echo "Kimi_AI_Bridge" ;;
         8890) echo "Jupyter_Lab_Core" ;;
         8885) echo "VS_Code_Server" ;;
         8122) echo "Vision_Core" ;;
         18800) echo "Imperial_AI_Architect" ;;
         65412) echo "DSVW_Security_Lab" ;;
+        9091) echo "Prometheus" ;;
+        9102) echo "SADC_Exporter" ;;
+        8089) echo "CTF_Trainer" ;;
+        8084) echo "CTF_UI" ;;
+        3001) echo "Grafana" ;;
         3306) echo "Imperial_Nexus_DB" ;;
+        *) echo "Unknown" ;;
     esac
 }
 
+# ===== CHECK PROMETHEUS RULES =====
+if command -v promtool &>/dev/null; then
+    if ! promtool check rules "$HOME/imperial_network/prometheus/imperial.rules.yml" &>/dev/null; then
+        echo "⚠️  Recording rules have syntax errors! Check ~/imperial_network/prometheus/imperial.rules.yml"
+    fi
+fi
+
+# ===== VAULT SENTRY =====
 echo "🔍 VAULT SENTRY CHECK: $(date)"
+bash ~/imperial_network/metrics_report.sh
+
 echo "Status: 🔒 PROTECTED | ✅ Integrity: 900 Users Verified."
 echo "🌅 DAWN REPORT [IMPERIAL OMEGA] - $(date)"
 echo "-------------------------------------------------------"
 
-# THE SCANNING ENGINE
-for port in 18800 12345 8002 3306 18789 1880 1883 8001 8005 8080 8081 8082 8083 8085 8086 8087 8088 8090 8091 8092 8093 8094 8095 8096 8097 8098 8099 8100 8101 8102 8103 8104 8105 8106 8107 8108 8110 8111 8112 8113 8114 8115 8117 8118 8191 8880 8888 8889 9001 9002 9003 9090 11434 5001 5002 5003 5006 5007 8119 8121 8890 8122 8885 65412; do
+# ===== PORT SCANNING =====
+TOTAL_PORTS=71
+ONLINE_COUNT=0
+FAILED_PORTS=""
+
+for port in 18800 12345 8002 3306 18789 1880 1883 8001 8005 8080 8081 8082 8083 8085 8086 8087 8088 8090 8091 8092 8093 8094 8095 8096 8097 8098 8099 8100 8101 8102 8103 8104 8105 8106 8107 8108 8110 8111 8112 8113 8114 8115 8117 8118 8191 8880 8888 8889 9001 9002 9003 9090 11434 5001 5002 5003 5006 5007 5008 8119 8120 8121 8890 8122 8885 65412 9091 9102 8089 8084 3001; do
     NAME=$(get_name $port)
-    if (timeout 0.1 bash -c "echo > /dev/tcp/localhost/$port") >/dev/null 2>&1 ; then
+    if (timeout 0.1 bash -c "echo > /dev/tcp/localhost/$port") >/dev/null 2>&1; then
         echo "🟢 ONLINE  | Port $port: $NAME"
         ((ONLINE_COUNT++))
     else
@@ -76,7 +95,6 @@ for port in 18800 12345 8002 3306 18789 1880 1883 8001 8005 8080 8081 8082 8083 
     fi
 done
 
-# MATH ENGINE
 CAPACITY=$(echo "scale=2; ($ONLINE_COUNT / $TOTAL_PORTS) * 100" | bc)
 
 echo "-------------------------------------------------------"
@@ -84,16 +102,19 @@ echo "🛡️ WAR SENTINEL: 🟢 ACTIVE - Monitoring Sky & Economy"
 echo "-------------------------------------------------------"
 echo "📊 STATUS: $ONLINE_COUNT/$TOTAL_PORTS ports verified"
 echo "⚠️  NOTICE: System performing at $CAPACITY% capacity."
-SADC_TOTAL=$(sqlite3 ~/imperial_network/instance/imperial.db "SELECT SUM(amount) FROM payment WHERE payment_method LIKE 'SADC%' ;" 2>/dev/null || echo 0)
-WEB_TOTAL=$(sqlite3 ~/imperial_network/instance/imperial.db "SELECT SUM(amount) FROM payment WHERE payment_method='IMPERIAL_WEB_UPGRADE';" 2>/dev/null || echo 0)
+
+# ===== FINANCIAL TOTALS =====
+SADC_TOTAL=$(mariadb -u root -pRootStrongPass123! -S $HOME/mysql_run/mysql.sock -e "USE imperial_nexus; SELECT SUM(amount) FROM payment WHERE payment_method LIKE 'SADC%'" -N -s 2>/dev/null || echo 0)
+WEB_TOTAL=$(mariadb -u root -pRootStrongPass123! -S $HOME/mysql_run/mysql.sock -e "USE imperial_nexus; SELECT SUM(amount) FROM payment WHERE payment_method='IMPERIAL_WEB_UPGRADE'" -N -s 2>/dev/null || echo 0)
 TRUE_VAL=$(echo "$SADC_TOTAL + $WEB_TOTAL" | bc 2>/dev/null || echo 0)
+
 echo ""
 echo "🏛️  IMPERIAL SUMMARY"
 echo "-------------------------------------------------------"
 echo "💰 PORTFOLIO VALUE: R$TRUE_VAL"
 echo "📈 PROGRESS TO R500B: $(echo "scale=4; ($TRUE_VAL / 500000000000) * 100" | bc)%"
 echo "🌍 SADC CORRIDOR:   🟢 ACTIVE (Zim/Moz)"
-    echo "   • TRADE VOLUME:    R5,017,500.00"
+echo "   • TRADE VOLUME:    R5,017,500.00"
 echo "🔒 WEALTH LOCK:     🟢 ACTIVE (Gain: R238050000.00)"
 echo "💎 TRUE VALUATION:   R$TRUE_VAL"
 echo ""
@@ -123,29 +144,35 @@ echo "IDC Status: Enquiry #4000120009 (Permanently Satisfied)"
 echo "Funding Scheme: Gro-E Youth Scheme (Industrial Expansion)"
 echo "========================================================="
 
-# ALERT ENGINE
+# ===== ALERT ENGINE – Port Down =====
 if [ "$ONLINE_COUNT" -lt "$TOTAL_PORTS" ]; then
-    python3 ~/imperial_network/notification_service_final.py "🚨 ALERT: System Degraded ($CAPACITY%). Down: $FAILED_PORTS"
+    ~/imperial_network/scripts/send_alert.sh "🚨 ALERT: System Degraded ($CAPACITY%). Down: $FAILED_PORTS"
 fi
 
+# ===== VULNERABILITY NOTIFICATION HOOK =====
+UNNOTIFIED=$(mariadb -u root -pRootStrongPass123! -S $HOME/mysql_run/mysql.sock -e "USE imperial_nexus; SELECT COUNT(*) FROM vulnerability_logs WHERE notified = 0;" -N -s 2>/dev/null)
+if [ -n "$UNNOTIFIED" ] && [ "$UNNOTIFIED" -gt 0 ]; then
+    echo "⚠️  NOTICE: $UNNOTIFIED new vulnerabilities require attention."
+    ~/imperial_network/scripts/send_alert.sh "🚨 New Vulnerabilities Logged: $UNNOTIFIED"
+    # Mark them as notified
+    mariadb -u root -pRootStrongPass123! -S $HOME/mysql_run/mysql.sock -e "USE imperial_nexus; UPDATE vulnerability_logs SET notified = 1 WHERE notified = 0;" 2>/dev/null
+fi
 
-# 🏛️ SAFE WEB INJECTION ENGINE
-if [ -z "$IMPERIAL_SYNC_ACTIVE" ]; then
-    export IMPERIAL_SYNC_ACTIVE=1
-    PORTALS=(
-        "/data/data/com.termux/files/home/imperial_network/humbu_store" 
-        "/data/data/com.termux/files/home/imperial_network/business_api/static" 
-        "/data/data/com.termux/files/home/imperial_network/imperial_front"
-    )
-    
-    REPORT_TEMP="$HOME/imperial_network/dawn_report_clean.txt"
-    # Call self with the flag set to prevent recursion
-    bash "$0" | sed 's/\x1b\[[0-9;]*m//g' > "$REPORT_TEMP"
+# ===== IMPERIAL NETWORK POLICY HUB =====
+echo "--- Imperial Network Policy Hub ---"
+echo "Policy Master: https://docs.google.com/document/d/1fy_OT98e_si7dDNVvGwV8qsmb_m4kE4Dvcoerntgc8A/edit"
+echo "Risk Register: https://docs.google.com/document/d/134KIt-rcW_tDpc6jCHcpqQYXOjWh0psHzb71aoFy4-c/edit"
+echo "-----------------------------------"
 
-    for DIR in "${PORTALS[@]}"; do
-        if [ -d "$DIR" ]; then
-            cp "$REPORT_TEMP" "$DIR/dawn_report.html"
-        fi
-    done
-    echo "✅ All 3 Portals Synced (Safe Mode)"
+# ===== BACKUP INTEGRITY CHECK =====
+LATEST_BACKUP=$(ls -t ~/imperial_vault/archives/*.tar.gz 2>/dev/null | head -n 1)
+if [ -f "$LATEST_BACKUP" ] && [ -f "$LATEST_BACKUP.sha256" ]; then
+    if sha256sum -c "$LATEST_BACKUP.sha256" > /dev/null 2>&1; then
+        echo "✅ Backup Integrity: VERIFIED ($(basename $LATEST_BACKUP))"
+    else
+        echo "❌ Backup Integrity: FAILED"
+        ~/imperial_network/scripts/send_alert.sh "🚨 BACKUP CORRUPTION DETECTED! Latest archive checksum mismatch."
+    fi
+else
+    echo "⚠️ Backup Integrity: No archive or checksum found."
 fi

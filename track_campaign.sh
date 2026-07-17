@@ -1,4 +1,18 @@
 #!/bin/bash
+# Override sqlite3 to use MariaDB instead
+
+sqlite3() {
+
+    local db="$1"
+
+    local query="$2"
+
+    mariadb -u root -pRootStrongPass123! -S "$HOME/mysql_run/mysql.sock" -e "USE imperial_nexus; $query" | tail -1
+
+}
+
+export -f sqlite3
+
 # 📊 IMPERIAL CAMPAIGN TRACKER
 
 echo "📊 IMPERIAL REFERRAL CAMPAIGN TRACKER"

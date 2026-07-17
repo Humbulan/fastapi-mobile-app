@@ -1,0 +1,1 @@
+../.picoclaw/workspace/update_wealth_metrics.sh

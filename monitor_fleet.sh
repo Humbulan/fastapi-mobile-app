@@ -1,0 +1,1 @@
+../.picoclaw/workspace/monitor_fleet.sh

@@ -1,0 +1,1 @@
+../.picoclaw/workspace/performance_monitor.sh

@@ -1,1 +1,1 @@
-gemini/imperial_gemini.sh
+../.picoclaw/workspace/imperial_gemini.sh

@@ -6,6 +6,7 @@ import json
 import tarfile
 import shutil
 from pathlib import Path
+import hashlib
 
 # ========== CONFIGURATION ==========
 VILLAGE_COUNT = 43
@@ -101,45 +102,77 @@ def get_directory_listing():
         return f"❌ Error: {e}"
 
 def run_backup():
-    """Fixed backup function with correct tarfile mode"""
+    """Backup with compression level 6, exclusions, and SHA256 checksum, including a MariaDB dump."""
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     backup_name = f"imperial_omega_state_{timestamp}.tar.gz"
-    backup_path = os.path.expanduser(f"~/imperial_backups/{backup_name}")
-    
-    # Create backup directory if it doesn't exist
-    os.makedirs(os.path.dirname(backup_path), exist_ok=True)
-    
-    print(f"💾 ARCHIVING TO: {backup_name}...")
-    
+    backup_dir = os.path.expanduser("~/imperial_vault/archives")
+    os.makedirs(backup_dir, exist_ok=True)
+    backup_path = os.path.join(backup_dir, backup_name)
+
+    # 1. Dump MariaDB databases
+    dump_path = os.path.expanduser("~/imperial_network/db_dump.sql")
     try:
-        # FIXED: Use 'w:gz' for compressed writing (single character mode)
-        with tarfile.open(backup_path, "w:gz") as tar:
-            # Add the entire imperial_network directory
+        print("📀 Dumping MariaDB databases...")
+        cmd = f"mysqldump --defaults-extra-file=$HOME/.my.cnf --all-databases > {dump_path}"
+        result = os.system(cmd)
+        if result != 0:
+            raise Exception("mysqldump failed")
+        print(f"  ✓ Database dumped to {dump_path}")
+    except Exception as e:
+        print(f"❌ Database dump failed: {e}")
+        return False
+
+    print(f"💾 ARCHIVING TO: {backup_name}...")
+
+    exclude_patterns = {
+        '__pycache__', '.git', '.pytest_cache', 'node_modules',
+        '*.pyc', '*.pyo', '*.log', 'logs', '*.tmp', '*.temp'
+    }
+
+    def filter_func(tarinfo):
+        name = tarinfo.name
+        for pat in exclude_patterns:
+            if pat in name:
+                return None
+        return tarinfo
+
+    try:
+        with tarfile.open(backup_path, "w:gz", compresslevel=6) as tar:
             imperial_path = os.path.expanduser("~/imperial_network")
             if os.path.exists(imperial_path):
-                tar.add(imperial_path, arcname="imperial_network")
-                print(f"  ✓ Added {imperial_path}")
-            
-            # Add humbu_community_nexus if it exists
+                tar.add(imperial_path, arcname="imperial_network", filter=filter_func)
+                print(f"  ✓ Added {imperial_path} (excluded junk)")
             nexus_path = os.path.expanduser("~/humbu_community_nexus")
             if os.path.exists(nexus_path):
-                tar.add(nexus_path, arcname="humbu_community_nexus")
+                tar.add(nexus_path, arcname="humbu_community_nexus", filter=filter_func)
                 print(f"  ✓ Added {nexus_path}")
-            
-            # Get file count
+
             file_count = len(tar.getmembers())
-        
-        # Verify backup size
-        size_mb = os.path.getsize(backup_path) / (1024 * 1024)
-        print(f"✅ Backup successful: {backup_name}")
-        print(f"  📦 Size: {size_mb:.2f} MB")
-        print(f"  📁 Location: {backup_path}")
-        print(f"  🔍 Files backed up: {file_count}")
-        
+            size_mb = os.path.getsize(backup_path) / (1024 * 1024)
+            print(f"✅ Backup successful: {backup_name}")
+            print(f"  📦 Size: {size_mb:.2f} MB")
+            print(f"  📁 Location: {backup_path}")
+            print(f"  🔍 Files backed up: {file_count}")
+
+        if os.path.exists(dump_path):
+            os.remove(dump_path)
+            print("  🧹 Removed temporary dump file from live directory")
+
+        sha256_hash = hashlib.sha256()
+        with open(backup_path, "rb") as f:
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        with open(f"{backup_path}.sha256", "w") as hash_file:
+            hash_file.write(f"{sha256_hash.hexdigest()}  {backup_name}\n")
+        print(f"  🔐 SHA256: {sha256_hash.hexdigest()[:16]}... (saved to {backup_path}.sha256)")
+
         return True
     except Exception as e:
         print(f"❌ Backup failed: {e}")
+        if os.path.exists(dump_path):
+            os.remove(dump_path)
         return False
+
 
 def quarantine_junk():
     """Move corrupted/unstable files to quarantine"""

@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Imperial Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; background: #0a0a0a; color: #eee; padding: 20px; }
+        h1 { color: #ffcc00; }
+        .section { margin: 30px 0; padding: 15px; background: #151515; border-left: 4px solid #ffcc00; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th { background: #222; }
+        tr:nth-child(even) { background: #1a1a1a; }
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+        .chart-box { background: #1a1a1a; padding: 15px; border-radius: 8px; }
+        canvas { max-height: 200px; width: 100% !important; }
+        @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>🏛️ Imperial Nexus Dashboard</h1>
+
+    <div class="section">
+        <h2>📊 District Performance & Budget</h2>
+        <table>
+            <tr><th>District</th><th>Rank</th><th>Items</th><th>Population</th><th>Priority</th><th>Budget Variance</th></tr>
+            
+            <tr>
+                <td>Mvurwi Central</td>
+                <td>1</td>
+                <td>452</td>
+                <td>15000</td>
+                <td>0.27</td>
+                <td>800000.00</td>
+            </tr>
+            
+            <tr>
+                <td>Guruve South</td>
+                <td>2</td>
+                <td>398</td>
+                <td>12000</td>
+                <td>0.27</td>
+                <td>-500000.00</td>
+            </tr>
+            
+            <tr>
+                <td>Shamva North</td>
+                <td>3</td>
+                <td>312</td>
+                <td>18000</td>
+                <td>0.12</td>
+                <td>6000000.00</td>
+            </tr>
+            
+            <tr>
+                <td>Bindura Urban</td>
+                <td>4</td>
+                <td>285</td>
+                <td>25000</td>
+                <td>0.07</td>
+                <td>250000.00</td>
+            </tr>
+            
+            <tr>
+                <td>Village 5</td>
+                <td>5</td>
+                <td>115</td>
+                <td>8500</td>
+                <td>0.07</td>
+                <td>0.00</td>
+            </tr>
+            
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🚢 Beira Corridor</h2>
+        <p><strong>Median Wait Time:</strong> 7.5 days</p>
+        <p><strong>Status:</strong> 🟢 Normal</p>
+        <div class="chart-grid">
+            <div class="chart-box">
+                <canvas id="beiraChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="rankChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📈 Financial & Performance Trends</h2>
+        <div class="chart-grid">
+            <div class="chart-box">
+                <canvas id="varianceChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="priorityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📈 900‑Village Rollout</h2>
+        <p>ROI: <strong>+R1,758,000,000</strong> (Q4 2026)</p>
+    </div>
+
+    <script>
+        // 1. Beira wait history
+        const beiraData = [["Sat, 27 Jun 2026 07:12:28 GMT", "12.30"], ["Fri, 26 Jun 2026 22:33:24 GMT", "12.30"], ["Fri, 26 Jun 2026 22:30:34 GMT", "12.30"], ["Fri, 26 Jun 2026 22:04:05 GMT", "18.50"], ["Fri, 26 Jun 2026 21:37:46 GMT", "18.50"], ["Fri, 26 Jun 2026 21:36:27 GMT", "18.50"]];
+        new Chart(document.getElementById('beiraChart'), {
+            type: 'line',
+            data: {
+                labels: beiraData.map(d => d[0]),
+                datasets: [{ label: 'Wait Days', data: beiraData.map(d => d[1]), borderColor: '#ffcc00', fill: false }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#eee' } } }, scales: { x: { ticks: { color: '#aaa' } }, y: { ticks: { color: '#aaa' } } } }
+        });
+
+        // 2. Rank evolution (last 30)
+        const rankData = [];
+        new Chart(document.getElementById('rankChart'), {
+            type: 'line',
+            data: {
+                labels: rankData.map(d => d[0]),
+                datasets: [{ label: 'Rank (lower is better)', data: rankData.map(d => d[2]), borderColor: '#ff6b6b', fill: false }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#eee' } } }, scales: { x: { ticks: { color: '#aaa' } }, y: { reverse: true, ticks: { color: '#aaa' } } } }
+        });
+
+        // 3. Budget variance trend (last 30)
+        const varianceData = [];
+        new Chart(document.getElementById('varianceChart'), {
+            type: 'bar',
+            data: {
+                labels: varianceData.map(d => d[0]),
+                datasets: [{ label: 'Budget Variance (R)', data: varianceData.map(d => d[2]), backgroundColor: '#4ecdc4' }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#eee' } } }, scales: { x: { ticks: { color: '#aaa' } }, y: { ticks: { color: '#aaa' } } } }
+        });
+
+        // 4. Priority score history (last 30)
+        const priData = [["Sat, 27 Jun 2026 07:12:28 GMT", "Mvurwi Central", "0.27"], ["Sat, 27 Jun 2026 07:12:28 GMT", "Guruve South", "0.27"], ["Sat, 27 Jun 2026 07:12:28 GMT", "Shamva North", "0.12"], ["Sat, 27 Jun 2026 07:12:28 GMT", "Bindura Urban", "0.07"], ["Sat, 27 Jun 2026 07:12:28 GMT", "Village 5", "0.07"], ["Fri, 26 Jun 2026 22:33:24 GMT", "Mvurwi Central", "0.27"], ["Fri, 26 Jun 2026 22:33:24 GMT", "Guruve South", "0.27"], ["Fri, 26 Jun 2026 22:33:24 GMT", "Shamva North", "0.12"], ["Fri, 26 Jun 2026 22:33:24 GMT", "Bindura Urban", "0.07"], ["Fri, 26 Jun 2026 22:33:24 GMT", "Village 5", "0.07"], ["Fri, 26 Jun 2026 22:30:34 GMT", "Mvurwi Central", "0.27"], ["Fri, 26 Jun 2026 22:30:34 GMT", "Guruve South", "0.27"], ["Fri, 26 Jun 2026 22:30:34 GMT", "Shamva North", "0.12"], ["Fri, 26 Jun 2026 22:30:34 GMT", "Bindura Urban", "0.07"], ["Fri, 26 Jun 2026 22:30:34 GMT", "Village 5", "0.07"], ["Fri, 26 Jun 2026 22:04:05 GMT", "Mvurwi Central", "0.27"], ["Fri, 26 Jun 2026 22:04:05 GMT", "Guruve South", "0.27"], ["Fri, 26 Jun 2026 22:04:05 GMT", "Shamva North", "0.12"], ["Fri, 26 Jun 2026 22:04:05 GMT", "Bindura Urban", "0.07"], ["Fri, 26 Jun 2026 22:04:05 GMT", "Village 5", "0.07"], ["Fri, 26 Jun 2026 21:37:46 GMT", "Mvurwi Central", "0.27"], ["Fri, 26 Jun 2026 21:37:46 GMT", "Guruve South", "0.27"], ["Fri, 26 Jun 2026 21:37:46 GMT", "Shamva North", "0.12"], ["Fri, 26 Jun 2026 21:37:46 GMT", "Bindura Urban", "0.07"], ["Fri, 26 Jun 2026 21:37:46 GMT", "Village 5", "0.07"], ["Fri, 26 Jun 2026 21:36:27 GMT", "Mvurwi Central", "0.27"], ["Fri, 26 Jun 2026 21:36:27 GMT", "Guruve South", "0.27"], ["Fri, 26 Jun 2026 21:36:27 GMT", "Shamva North", "0.12"], ["Fri, 26 Jun 2026 21:36:27 GMT", "Bindura Urban", "0.07"], ["Fri, 26 Jun 2026 21:36:27 GMT", "Village 5", "0.07"]];
+        new Chart(document.getElementById('priorityChart'), {
+            type: 'bar',
+            data: {
+                labels: priData.map(d => d[0]),
+                datasets: [{ label: 'Priority Score', data: priData.map(d => d[2]), backgroundColor: '#ffcc00' }]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#eee' } } }, scales: { x: { ticks: { color: '#aaa' } }, y: { ticks: { color: '#aaa' } } } }
+        });
+    </script>
+</body>
+</html>

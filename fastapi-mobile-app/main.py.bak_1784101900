@@ -1,0 +1,133 @@
+import os
+import subprocess
+from fastapi import FastAPI, HTTPException, Header, Depends, Depends
+from fastapi.responses import HTMLResponse
+
+app = FastAPI()
+
+def mysql_query(sql):
+    cmd = [
+        "mariadb",
+        "-u", "root",
+        "-pRootStrongPass123!",
+        "-S", "/data/data/com.termux/files/home/mysql_run/mysql.sock",
+        "imperial_nexus",
+        "-e", sql
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+    if result.returncode != 0:
+        raise Exception(result.stderr.strip())
+    return result.stdout
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+@app.get("/admin/usage")
+async def admin_usage(admin_key: str = Header(None, alias="X-Admin-Key"), payment_id: str = "unknown", fields: str = "basic"):
+    if admin_key != os.getenv("ADMIN_KEY"):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    insert_sql = f"INSERT INTO usage_logs (api_key, payment_id, fields) VALUES (\"{admin_key}\", \"{payment_id}\", \"{fields}\")"
+    try:
+        mysql_query(insert_sql)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Insert error: {e}")
+    
+    select_sql = "SELECT timestamp, api_key, payment_id, fields FROM usage_logs"
+    try:
+        output = mysql_query(select_sql)
+        lines = output.strip().split("\n")
+        if len(lines) < 2:
+            entries = []
+        else:
+            header = lines[0].split("\t")
+            entries = [dict(zip(header, line.split("\t"))) for line in lines[1:]]
+        return {"total_requests": len(entries), "entries": entries}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Select error: {e}")
+
+@app.get("/")
+async def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/portal")
+
+
+# === Auth helpers for portal ===
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+security = HTTPBasic()
+
+def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
+    if credentials.username == os.getenv("PORTAL_USERNAME", "admin") and credentials.password == os.getenv("PORTAL_PASSWORD", "securepass"):
+        return credentials.username
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+@app.get("/portal")
+async def portal():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Imperial Data Portal</title>
+        <style>
+            body { font-family: sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; background: #f4f4f4; }
+            input, button { padding: 10px; width: 100%; margin: 8px 0; }
+            button { background: #2d7; border: none; color: white; font-weight: bold; cursor: pointer; }
+            #result { background: white; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+            .nav { margin-bottom: 20px; }
+            .nav a { margin-right: 15px; }
+        </style>
+    </head>
+    <body>
+        <h2>🔐 Imperial Data Export</h2>
+        <p>Logged in as <strong>admin</strong></p>
+        <div class="nav">
+            <a href="/portal">Export</a> | <a href="/generate-download" onclick="return false;">Generate Download Link</a>
+        </div>
+        <form id="exportForm">
+            <input type="text" id="apiKey" placeholder="Your X-Export-Key" required>
+            <input type="text" id="paymentId" placeholder="Payment ID (e.g., tx_001)" required>
+            <select id="fields">
+                <option value="basic">Basic (tx_id, amount, date)</option>
+                <option value="full">Full (id, tx_id, amount, status, created_at)</option>
+            </select>
+            <button type="submit">Get Data</button>
+            <button type="button" id="downloadBtn" onclick="downloadData()">Download CSV</button>
+        </form>
+        <div id="result"></div>
+        <script>
+            async function callAPI(endpoint) {
+                const key = document.getElementById('apiKey').value;
+                const pid = document.getElementById('paymentId').value;
+                const fields = document.getElementById('fields').value;
+                const res = document.getElementById('result');
+                res.innerHTML = 'Loading...';
+                try {
+                    const response = await fetch(`/${endpoint}?payment_id=${pid}&fields=${fields}`, {
+                        headers: { 'X-Export-Key': key }
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        if (data.download_link) {
+                            res.innerHTML = `<p>Download link: <a href="${data.download_link}" target="_blank">${data.download_link}</a> (expires in ${data.expires_in})</p>`;
+                        } else {
+                            res.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                        }
+                    } else {
+                        res.innerHTML = '<b>Error:</b> ' + (data.detail || 'Unknown error');
+                    }
+                } catch (err) {
+                    res.innerHTML = '<b>Error:</b> ' + err.message;
+                }
+            }
+            document.getElementById('exportForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                callAPI('export-data');
+            });
+            function downloadData() {
+                callAPI('generate-download');
+            }
+        </script>
+    </body>
+    </html>
+    """

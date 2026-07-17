@@ -1,0 +1,1 @@
+../.picoclaw/workspace/forward_alerts.sh

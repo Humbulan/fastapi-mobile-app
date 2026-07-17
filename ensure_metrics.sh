@@ -1,0 +1,1 @@
+../.picoclaw/workspace/ensure_metrics.sh

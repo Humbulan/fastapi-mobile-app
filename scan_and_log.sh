@@ -1,0 +1,1 @@
+../.picoclaw/workspace/scan_and_log.sh

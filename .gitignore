@@ -67,3 +67,5 @@ tmp_clawd/
 *.gz
 ~/
 node_modules/
+grafana-v11.2.0/
+projects/
